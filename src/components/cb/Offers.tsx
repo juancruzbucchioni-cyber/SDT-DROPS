@@ -52,24 +52,7 @@ export function Offers() {
     window.dispatchEvent(new CustomEvent("sdt-offers-updated"));
   }, [offers]);
 
-  useEffect(() => {
-    const adminHandler = () => setAdminUnlocked(true);
-    const offersHandler = () => {
-      try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? (JSON.parse(raw) as Offer[]) : [];
-        if (Array.isArray(parsed) && parsed.length) setOffers(parsed);
-      } catch {
-        // noop
-      }
-    };
-    window.addEventListener("sdt-admin-unlocked", adminHandler as EventListener);
-    window.addEventListener("sdt-offers-updated", offersHandler as EventListener);
-    return () => {
-      window.removeEventListener("sdt-admin-unlocked", adminHandler as EventListener);
-      window.removeEventListener("sdt-offers-updated", offersHandler as EventListener);
-    };
-  }, []);
+
 
   const startEdit = (offer: Offer) => {
     setEditingId(offer.id);
@@ -105,7 +88,10 @@ export function Offers() {
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setDraft((prev) => ({ ...prev, img: reader.result }));
+        setDraft((prev): Offer => ({
+  ...prev,
+  img: reader.result as string,
+}));
       }
     };
     reader.readAsDataURL(file);
