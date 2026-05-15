@@ -82,20 +82,29 @@ export function Offers() {
     if (editingId === id) reset();
   };
 
-  const onImageUpload = (file: File | undefined) => {
-    if (!file) return;
-    if (file.size > MAX_IMAGE_SIZE_BYTES) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setDraft((prev): Offer => ({
-  ...prev,
-  img: reader.result as string,
-}));
-      }
-    };
-    reader.readAsDataURL(file);
+const onImageUpload = (file: File | undefined) => {
+  if (!file) return;
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    alert("Imagen demasiado pesada");
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onloadend = () => {
+    const result = reader.result;
+
+    if (typeof result !== "string") return;
+
+    setDraft((prev) => ({
+      ...prev,
+      img: result,
+    }));
   };
+
+  reader.readAsDataURL(file);
+};
 
   return (
     <section id="ofertas" className="relative border-b border-border py-24">
