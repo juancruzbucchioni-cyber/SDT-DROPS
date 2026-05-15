@@ -1,0 +1,113 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-neon: var(--neon);
+  --font-display: "Oswald", "Impact", system-ui, sans-serif;
+  --font-sans: "Rajdhani", "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --radius: 0.25rem;
+  --background: oklch(0.08 0.01 255);
+  --foreground: oklch(0.98 0.005 255);
+  --card: oklch(0.12 0.015 255);
+  --card-foreground: oklch(0.98 0.005 255);
+  --popover: oklch(0.12 0.015 255);
+  --popover-foreground: oklch(0.98 0.005 255);
+  --primary: oklch(0.66 0.29 255);
+  --primary-foreground: oklch(0.08 0.01 255);
+  --secondary: oklch(0.18 0.02 255);
+  --secondary-foreground: oklch(0.98 0.005 255);
+  --muted: oklch(0.16 0.015 255);
+  --muted-foreground: oklch(0.72 0.02 255);
+  --accent: oklch(0.66 0.29 255);
+  --accent-foreground: oklch(0.08 0.01 255);
+  --destructive: oklch(0.62 0.25 27);
+  --destructive-foreground: oklch(0.98 0.005 255);
+  --border: oklch(0.24 0.035 252);
+  --input: oklch(0.18 0.02 255);
+  --ring: oklch(0.66 0.29 255);
+  --neon: oklch(0.66 0.29 255);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+}
+
+@layer utilities {
+  .text-neon {
+    color: var(--neon);
+    text-shadow: 0 0 10px color-mix(in oklab, var(--neon) 60%, transparent), 0 0 28px color-mix(in oklab, var(--neon) 35%, transparent);
+  }
+  .glow-neon {
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--neon) 40%, transparent), 0 0 22px color-mix(in oklab, var(--neon) 35%, transparent), 0 0 60px color-mix(in oklab, var(--neon) 18%, transparent);
+  }
+  .glow-hover {
+    transition: box-shadow .35s ease, transform .35s ease, border-color .35s ease, color .35s ease;
+  }
+  .glow-hover:hover {
+    box-shadow: 0 0 0 1px var(--neon), 0 0 30px color-mix(in oklab, var(--neon) 55%, transparent), 0 0 80px color-mix(in oklab, var(--neon) 30%, transparent);
+    border-color: var(--neon);
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--neon) 8%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--neon) 8%, transparent) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .text-stroke {
+    -webkit-text-stroke: 1px var(--foreground);
+    color: transparent;
+  }
+  .gradient-neon {
+    background: linear-gradient(135deg, oklch(0.66 0.29 255), oklch(0.58 0.27 235));
+  }
+  .clip-slash {
+    clip-path: polygon(0 0, 100% 0, 96% 100%, 4% 100%);
+  }
+  @keyframes neon-pulse { 0%,100% { opacity:1 } 50% { opacity:.55 } }
+  .animate-neon-pulse { animation: neon-pulse 2.4s ease-in-out infinite; }
+  @keyframes scan { 0% { transform: translateY(-100%) } 100% { transform: translateY(100%) } }
+  .animate-scan { animation: scan 6s linear infinite; }
+  @keyframes marquee { 0% { transform: translateX(0) } 100% { transform: translateX(-50%) } }
+  .animate-marquee { animation: marquee 30s linear infinite; }
+}
+

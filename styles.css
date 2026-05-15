@@ -1,0 +1,218 @@
+﻿:root {
+  --bg: #060606;
+  --bg-soft: #121212;
+  --surface: #161616;
+  --text: #ffffff;
+  --muted: #cfcfe6;
+  --accent: #9b2dff;
+  --accent-strong: #6d00e8;
+  --line: #2b2b2b;
+  --ok: #ffffff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Manrope", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(900px 500px at 85% -5%, rgba(155, 45, 255, 0.24), transparent),
+    radial-gradient(700px 350px at -10% 5%, rgba(155, 45, 255, 0.16), transparent),
+    var(--bg);
+}
+
+.topbar {
+  background: linear-gradient(90deg, #000, var(--accent), #000);
+  text-align: center;
+  padding: 0.55rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-bottom: 1px solid #3a2a4f;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 6vw;
+  position: sticky;
+  top: 0;
+  background: rgba(6, 6, 6, 0.92);
+  backdrop-filter: blur(8px);
+  z-index: 20;
+}
+
+.brand img {
+  width: 200px;
+  max-width: 52vw;
+  height: auto;
+  display: block;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+button, .primary, .secondary, .cta {
+  border: 0;
+  padding: 0.8rem 1.1rem;
+  border-radius: 0.8rem;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 800;
+  display: inline-block;
+}
+
+.cta, .primary {
+  background: linear-gradient(90deg, var(--accent-strong), var(--accent));
+  color: #fff;
+}
+
+.secondary {
+  background: transparent;
+  border: 1px solid #5f4a7f;
+  color: var(--text);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 2rem;
+  padding: 4rem 6vw 2rem;
+  align-items: center;
+}
+
+.kicker {
+  color: #d8b4ff;
+  font-weight: 800;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+}
+
+.hero h1 {
+  font-family: "Barlow Condensed", sans-serif;
+  text-transform: uppercase;
+  font-size: clamp(2rem, 4.5vw, 4.2rem);
+  line-height: 0.95;
+  margin: 0.5rem 0;
+}
+
+.hero p { color: var(--muted); }
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.hero-card {
+  background: linear-gradient(160deg, #0f0f10, #171319);
+  border: 1px solid #46335e;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 18px 50px rgba(91, 0, 181, 0.25);
+}
+
+.hero-card .product { font-weight: 700; }
+.hero-card .old { text-decoration: line-through; color: #b6a6cb; }
+.hero-card .new { font-size: 2rem; font-weight: 800; color: #fff; margin: 0; }
+
+.showcase {
+  padding: 1rem 6vw 2rem;
+}
+
+.showcase img {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid #4f2f70;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.catalog { padding: 1.5rem 6vw; }
+
+.catalog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filters { display: flex; gap: 0.6rem; }
+input, select {
+  padding: 0.7rem;
+  border-radius: 0.7rem;
+  border: 1px solid #4a4a4a;
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+.grid {
+  margin-top: 1.2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid #37264b;
+  border-radius: 0.9rem;
+  padding: 1rem;
+}
+
+.tag {
+  display: inline-block;
+  background: rgba(155, 45, 255, 0.18);
+  color: #e4cbff;
+  border: 1px solid rgba(155, 45, 255, 0.5);
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  margin-bottom: 0.5rem;
+}
+
+.card h3 { margin: 0.2rem 0; font-size: 1rem; }
+.price { font-size: 1.35rem; font-weight: 800; margin: 0.3rem 0; }
+.stock { color: #ffffff; font-weight: 700; font-size: 0.85rem; }
+.out { color: #f4c8ff; }
+
+.benefits {
+  padding: 2rem 6vw;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.benefits article {
+  background: #121212;
+  border: 1px solid #3a2b4a;
+  border-radius: 0.9rem;
+  padding: 1rem;
+}
+
+.footer {
+  margin-top: 1rem;
+  padding: 2rem 6vw 3rem;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 840px) {
+  .hero { grid-template-columns: 1fr; padding-top: 2rem; }
+  .nav { flex-direction: column; gap: 0.7rem; }
+  .nav-actions { flex-wrap: wrap; justify-content: center; }
+}
