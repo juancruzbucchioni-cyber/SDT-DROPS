@@ -438,7 +438,7 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
     try {
       loadProductsFromStorage();
       const params = new URLSearchParams(window.location.search);
-      const isAdminParam = params.get("admin") === "1";
+      const isAdminParam = params.get("panel") === "sdtdrops2025";
       setAdminMode(isAdminParam);
       setAdminUnlocked(isAdminParam && window.sessionStorage.getItem(ADMIN_SESSION_KEY) === "ok");
       loadOrders();
