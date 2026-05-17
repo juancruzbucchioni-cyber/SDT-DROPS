@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ProductItem } from "@/components/cb/Products";
 import { CATEGORIES_STORAGE_KEY, defaultCategories, type CategoryItem } from "@/components/cb/catalog-config";
+import fallbackProductImage from "@/assets/productos/todos.png";
 
 const STORAGE_KEY = "sdt_drops_products_v3";
 
@@ -11,6 +12,13 @@ function formatPrice(value: number) {
     maximumFractionDigits: 0,
     currencyDisplay: "code",
   }).format(value);
+}
+
+function resolveImageSrc(src?: string) {
+  const value = String(src ?? "").trim();
+  if (!value) return fallbackProductImage;
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  return fallbackProductImage;
 }
 
 export function TrendingProducts() {
@@ -75,7 +83,15 @@ export function TrendingProducts() {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((p) => (
             <a key={p.id} href={categoryHref(p.cat)} onClick={() => openProductInCategory(p)} className="block border border-border bg-card/70 p-4">
-              <div className="mb-3 aspect-square w-full bg-cover bg-center" style={{ backgroundImage: `url(${p.img})` }} />
+              <img
+                src={resolveImageSrc(p.img)}
+                alt={p.name}
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.src = fallbackProductImage;
+                }}
+                className="mb-3 aspect-square w-full object-cover"
+              />
               <p className="font-display text-xs uppercase tracking-widest text-muted-foreground">{p.cat}</p>
               <h3 className="mt-1 font-display text-lg font-bold uppercase">{p.name}</h3>
               <p className="mt-2 font-display text-xl font-bold text-neon">{formatPrice(p.price)}</p>
