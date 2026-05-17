@@ -23,6 +23,7 @@ const cartKey = (id: string, selectedColor?: string) => `${id}::${selectedColor 
 
 function Index() {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartHydrated, setCartHydrated] = useState(false);
 
   useEffect(() => {
     void initializeCloudSync().then(() => {
@@ -32,18 +33,21 @@ function Index() {
         if (Array.isArray(parsed)) setCart(parsed);
       } catch {
         // noop
+      } finally {
+        setCartHydrated(true);
       }
     });
   }, []);
 
   useEffect(() => {
+    if (!cartHydrated) return;
     try {
       window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
       window.dispatchEvent(new CustomEvent("sdt-cart-updated"));
     } catch {
       // noop
     }
-  }, [cart]);
+  }, [cart, cartHydrated]);
 
   const addToCart = (product: ProductItem, selectedColor?: string) => {
     setCart((prev) => {

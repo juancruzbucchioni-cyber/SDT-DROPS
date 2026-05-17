@@ -1,5 +1,6 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const LOCAL_ONLY_MODE = (import.meta.env.VITE_LOCAL_ONLY_MODE as string | undefined) === "1";
 
 const TABLE = "sdt_app_state";
 const ROW_ID = "main";
@@ -14,9 +15,19 @@ const KEYS = {
 
 let initialized = false;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+let syncReady = false;
 
 function isEnabled() {
-  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  return !LOCAL_ONLY_MODE && Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+}
+
+export function isCloudSyncEnabled() {
+  return isEnabled();
+}
+
+function markSyncReady() {
+  syncReady = true;
+  window.dispatchEvent(new CustomEvent("sdt-cloud-sync-ready"));
 }
 
 function restHeaders() {
@@ -48,6 +59,18 @@ function readLocalState() {
 
 function hasAnyLocalData(state: ReturnType<typeof readLocalState>) {
   return Object.values(state).some((v) => v !== null && v !== undefined);
+}
+
+function hasMeaningfulData(value: unknown) {
+  if (Array.isArray(value)) return value.length > 0;
+  if (value && typeof value === "object") return Object.keys(value as Record<string, unknown>).length > 0;
+  return value !== null && value !== undefined;
+}
+
+function hasMeaningfulCloudData(payload: unknown) {
+  if (!payload || typeof payload !== "object") return false;
+  const obj = payload as Record<string, unknown>;
+  return Object.values(obj).some(hasMeaningfulData);
 }
 
 function writeLocalState(payload: Partial<Record<keyof ReturnType<typeof readLocalState>, unknown>>) {
@@ -94,21 +117,24 @@ function scheduleSave() {
 }
 
 export async function initializeCloudSync() {
-  if (initialized) return;
+  if (initialized) {
+    if (syncReady) markSyncReady();
+    return;
+  }
   initialized = true;
-  if (!isEnabled()) return;
+  if (!isEnabled()) {
+    markSyncReady();
+    return;
+  }
 
   try {
     const localState = readLocalState();
-    if (hasAnyLocalData(localState)) {
-      await saveCloudState();
-    }
-
     const cloudPayload = await fetchCloudState();
-    if (!hasAnyLocalData(localState) && cloudPayload && typeof cloudPayload === "object") {
+
+    if (cloudPayload && hasMeaningfulCloudData(cloudPayload)) {
       writeLocalState(cloudPayload as Partial<Record<keyof ReturnType<typeof readLocalState>, unknown>>);
       dispatchRefreshEvents();
-    } else if (!cloudPayload) {
+    } else if (hasAnyLocalData(localState)) {
       await saveCloudState();
     }
   } catch {
@@ -123,4 +149,5 @@ export async function initializeCloudSync() {
     "sdt-cart-updated",
   ];
   watched.forEach((eventName) => window.addEventListener(eventName, scheduleSave as EventListener));
+  markSyncReady();
 }
