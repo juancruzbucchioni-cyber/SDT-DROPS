@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import fallbackProductImage from "@/assets/productos/todos.png";
 import { Plus, Pencil, Trash2, Save, X } from "lucide-react";
-import { isCloudSyncEnabled } from "@/lib/cloud-sync";
 
 export type ProductItem = {
   id: string;
@@ -53,13 +52,6 @@ function resolveColorCss(color: string) {
   return map[c] ?? color;
 }
 
-function resolveImageSrc(src?: string) {
-  const value = String(src ?? "").trim();
-  if (!value) return fallbackProductImage;
-  if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("data:image/")) return value;
-  return fallbackProductImage;
-}
-
 export function getUnitPrice(product: ProductItem, qty: number) {
   const tiers = (product.tierPrices ?? []).slice().sort((a, b) => a.minQty - b.minQty);
   for (const tier of tiers) {
@@ -81,6 +73,8 @@ type OrderRecord = {
 const STORAGE_KEY = "sdt_drops_products_v3";
 const ORDERS_STORAGE_KEY = "sdt_drops_orders_v1";
 const ADMIN_SESSION_KEY = "sdt_drops_admin_ok";
+const ADMIN_PASSWORD = "Santiago.villalba2025";
+const MAX_IMAGE_SIZE_BYTES = 1_500_000;
 
 const TYPO_RULES: Array<[RegExp, string]> = [
   [/\bccelulares\b/gi, "celulares"],
@@ -333,15 +327,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   return (
     <article className="group relative flex flex-col border border-border/80 bg-card/55 backdrop-blur-sm glow-hover">
       <div className="relative aspect-square overflow-hidden">
-        <img
-          src={resolveImageSrc(p.img)}
-          alt={p.name}
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.src = fallbackProductImage;
-          }}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
+        <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${p.img})` }} />
         <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
         {p.tag && <span className="absolute left-3 top-3 border border-primary bg-background/80 px-2 py-1 font-display text-[10px] font-bold tracking-widest text-neon backdrop-blur">{p.tag}</span>}
         <button disabled={disabled} onClick={() => onAddToCart(p, selectedColor)} className="absolute inset-x-3 bottom-3 inline-flex translate-y-3 items-center justify-center gap-2 border border-primary bg-primary/95 px-4 py-3 font-display text-xs font-bold uppercase tracking-widest text-primary-foreground opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60">
@@ -401,7 +387,6 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   const [draft, setDraft] = useState<ProductDraft>(emptyDraft);
   const [error, setError] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
-  const [isSyncReady, setIsSyncReady] = useState(!isCloudSyncEnabled());
 
   const loadProductsFromStorage = () => {
     try {
@@ -450,12 +435,6 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   };
 
   useEffect(() => {
-    const readyHandler = () => setIsSyncReady(true);
-    window.addEventListener("sdt-cloud-sync-ready", readyHandler as EventListener);
-    return () => window.removeEventListener("sdt-cloud-sync-ready", readyHandler as EventListener);
-  }, []);
-
-  useEffect(() => {
     try {
       loadProductsFromStorage();
       const params = new URLSearchParams(window.location.search);
@@ -471,14 +450,14 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   }, []);
 
   useEffect(() => {
-    if (!isHydrated || !isSyncReady) return;
+    if (!isHydrated) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
       window.dispatchEvent(new CustomEvent("sdt-products-updated"));
     } catch {
       setError("No se pudo guardar en el navegador. Reduce tamano/cantidad de imagenes.");
     }
-  }, [products, isHydrated, isSyncReady]);
+  }, [products, isHydrated]);
 
   useEffect(() => {
     const orderHandler = () => loadOrders();
@@ -537,8 +516,21 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
     if (editingId === id) resetDraft();
   };
 
-  const onImageUpload = (_file: File | undefined) => {
-    setError("Subi la imagen a Supabase Storage y pega la URL publica en el campo URL de imagen.");
+  const onImageUpload = (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      setError("Imagen demasiado grande. Usa una de hasta 1.5 MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setDraft((prev) => ({ ...prev, img: reader.result as string }));
+      }
+    };
+    reader.onerror = () => setError("No se pudo leer la imagen.");
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -613,8 +605,8 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
                       <select value={draft.cat} onChange={(e) => setDraft((p) => ({ ...p, cat: e.target.value }))} className="border border-border bg-background px-3 py-2 text-sm">{categoryOptions.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select>
                       <input value={draft.tag} onChange={(e) => setDraft((p) => ({ ...p, tag: e.target.value }))} placeholder="Etiqueta (ej: NUEVO)" className="border border-border bg-background px-3 py-2 text-sm" />
                       <input value={draft.compatibleModels} onChange={(e) => setDraft((p) => ({ ...p, compatibleModels: e.target.value }))} placeholder="Modelos compatibles (separados por coma)" className="border border-border bg-background px-3 py-2 text-sm sm:col-span-2" />
-                      <input value={draft.img} onChange={(e) => setDraft((p) => ({ ...p, img: e.target.value }))} placeholder="URL publica de imagen (Supabase Storage)" className="border border-border bg-background px-3 py-2 text-sm sm:col-span-2" />
-                      <div className="sm:col-span-2"><label className="mb-1 block text-xs uppercase tracking-widest text-muted-foreground">archivo local (no recomendado)</label><input type="file" accept="image/*" onChange={(e) => onImageUpload(e.target.files?.[0])} className="w-full border border-border bg-background px-3 py-2 text-sm" /></div>
+                      <input value={draft.img} onChange={(e) => setDraft((p) => ({ ...p, img: e.target.value }))} placeholder="URL de imagen (opcional)" className="border border-border bg-background px-3 py-2 text-sm sm:col-span-2" />
+                      <div className="sm:col-span-2"><label className="mb-1 block text-xs uppercase tracking-widest text-muted-foreground">o subir imagen</label><input type="file" accept="image/*" onChange={(e) => onImageUpload(e.target.files?.[0])} className="w-full border border-border bg-background px-3 py-2 text-sm" /></div>
                     </div>
                     {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
                     <div className="mt-4 flex flex-wrap gap-2"><button onClick={saveProduct} className="inline-flex items-center gap-2 border border-primary bg-primary px-4 py-2 font-display text-xs font-bold uppercase tracking-widest text-primary-foreground"><Save className="h-4 w-4" /> Guardar</button><button onClick={resetDraft} className="inline-flex items-center gap-2 border border-border px-4 py-2 font-display text-xs font-bold uppercase tracking-widest text-foreground"><X className="h-4 w-4" /> Limpiar</button></div>
@@ -653,4 +645,9 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
     </section>
   );
 }
+
+
+
+
+
 
