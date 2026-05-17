@@ -19,7 +19,7 @@ const catalogLinks = [
 
 const ORDERS_STORAGE_KEY = "sdt_drops_orders_v1";
 const ADMIN_SESSION_KEY = "sdt_drops_admin_ok";
-const ADMIN_PASSWORD = "Santiago.villalba2025";
+const ADMIN_PASSWORD = (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) ?? "";
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat("es-AR", {
@@ -82,6 +82,10 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
   }, []);
 
   const unlockAdmin = () => {
+    if (!ADMIN_PASSWORD) {
+      setAdminError("Configura VITE_ADMIN_PASSWORD en variables de entorno.");
+      return;
+    }
     if (adminPass === ADMIN_PASSWORD) {
       window.sessionStorage.setItem(ADMIN_SESSION_KEY, "ok");
       setAdminUnlocked(true);
@@ -112,15 +116,25 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
     try {
       const productsRaw = window.localStorage.getItem("sdt_drops_products_v3");
       const products = productsRaw ? (JSON.parse(productsRaw) as ProductItem[]) : [];
+      const qtyByProductId = new Map<string, number>();
+      const qtyByProductColor = new Map<string, number>();
+      cart.forEach((item) => {
+        qtyByProductId.set(item.id, (qtyByProductId.get(item.id) ?? 0) + item.qty);
+        if (item.selectedColor) {
+          const key = `${item.id}::${item.selectedColor.toLowerCase()}`;
+          qtyByProductColor.set(key, (qtyByProductColor.get(key) ?? 0) + item.qty);
+        }
+      });
       const nextProducts = products.map((p) => {
-        const cartItem = cart.find((c) => c.id === p.id);
-        if (!cartItem) return p;
-        const nextStock = Math.max(0, p.stock - cartItem.qty);
-        if (!cartItem.selectedColor || !p.colors?.length) return { ...p, stock: nextStock };
+        const totalQty = qtyByProductId.get(p.id) ?? 0;
+        if (totalQty <= 0) return p;
+        const nextStock = Math.max(0, p.stock - totalQty);
+        if (!p.colors?.length) return { ...p, stock: nextStock };
         const nextColors = p.colors.map((c) =>
-          c.color.toLowerCase() === cartItem.selectedColor?.toLowerCase()
-            ? { ...c, stock: Math.max(0, c.stock - cartItem.qty) }
-            : c,
+          ({
+            ...c,
+            stock: Math.max(0, c.stock - (qtyByProductColor.get(`${p.id}::${c.color.toLowerCase()}`) ?? 0)),
+          }),
         );
         return { ...p, stock: nextStock, colors: nextColors };
       });
