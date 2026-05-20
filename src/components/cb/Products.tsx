@@ -6,6 +6,7 @@ import { isCloudSyncEnabled } from "@/lib/cloud-sync";
 export type ProductItem = {
   id: string;
   name: string;
+  description?: string;
   price: number;
   tierPrices?: TierPrice[];
   colors?: ColorStock[];
@@ -107,6 +108,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
       <div className="flex flex-col gap-1 p-5">
         <span className="font-display text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{p.cat}</span>
         <h3 className="font-display text-base font-bold leading-tight text-foreground">{p.name}</h3>
+        {p.description ? <p className="text-xs text-muted-foreground">{p.description}</p> : null}
         <p className="text-xs text-muted-foreground">Compatibilidad: {p.compatibleModels.join(", ")}</p>
         <p className="text-xs text-muted-foreground">Stock disponible: <span className="text-neon font-bold">{remaining}</span></p>
         <div className="mt-2 flex items-baseline gap-2">
@@ -158,6 +160,7 @@ const sections = [
 export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: ProductItem) => void; cartQtyById: Record<string, number> }) {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSyncReady, setIsSyncReady] = useState(!isCloudSyncEnabled());
@@ -213,13 +216,20 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
     return Array.from(set).sort();
   }, [products]);
 
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => set.add(p.cat));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     const byModel = !selectedModel
       ? products
       : products.filter((p) => p.compatibleModels.includes(selectedModel) || p.compatibleModels.includes("Universal"));
-    if (!searchTerm) return byModel;
-    return byModel.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [products, selectedModel, searchTerm]);
+    const byCategory = !selectedCategory ? byModel : byModel.filter((p) => p.cat === selectedCategory);
+    if (!searchTerm) return byCategory;
+    return byCategory.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [products, selectedModel, selectedCategory, searchTerm]);
 
   if (!isHydrated || !isSyncReady) {
     return <section id="productos" className="relative border-b border-border py-24"><div className="mx-auto max-w-7xl px-4 md:px-8 text-sm text-muted-foreground">Cargando productos...</div></section>;
@@ -239,6 +249,30 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
               <option value="">Ver todos los productos</option>
               {availableModels.map((model) => <option key={model} value={model}>{model}</option>)}
             </select>
+          </div>
+        </div>
+
+        <div className="mb-8 border border-border bg-card/70 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="font-display text-xl font-bold uppercase tracking-widest text-neon">Categorias</h3>
+            <button
+              onClick={() => setSelectedCategory("")}
+              className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-neon"
+            >
+              Reiniciar
+            </button>
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input type="radio" name="cat-filter" checked={selectedCategory === ""} onChange={() => setSelectedCategory("")} />
+              Todas las categorias
+            </label>
+            {availableCategories.map((cat) => (
+              <label key={cat} className="inline-flex items-center gap-2 text-sm">
+                <input type="radio" name="cat-filter" checked={selectedCategory === cat} onChange={() => setSelectedCategory(cat)} />
+                {cat}
+              </label>
+            ))}
           </div>
         </div>
 

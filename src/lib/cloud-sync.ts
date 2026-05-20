@@ -1,5 +1,8 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const FALLBACK_SUPABASE_URL = "https://nwshsunoxwmgddtjvaqh.supabase.co";
+const FALLBACK_SUPABASE_ANON_KEY = "sb_publishable_e0Om4SdAs2xpHCLiQXmxzg_48ETZdxA";
+
+const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? FALLBACK_SUPABASE_URL;
+const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? FALLBACK_SUPABASE_ANON_KEY;
 
 const KEYS = {
   products: "sdt_drops_products_v3",
@@ -44,6 +47,7 @@ function dispatchRefreshEvents() {
 type DbProduct = {
   id: string;
   name: string;
+  description?: string | null;
   cat: string;
   img: string;
   price: number;
@@ -59,13 +63,14 @@ type DbCategory = { id: string; name: string; img: string; order: number };
 type DbOffer = { id: string; title: string; description: string; badge: string; img?: string | null };
 
 async function fetchProducts() {
-  const url = `${SUPABASE_URL}/rest/v1/products?select=id,name,cat,img,price,old,tag,stock,compatible_models,colors,tier_prices`;
+  const url = `${SUPABASE_URL}/rest/v1/products?select=id,name,description,cat,img,price,old,tag,stock,compatible_models,colors,tier_prices`;
   const res = await fetch(url, { headers: restHeaders() });
   if (!res.ok) return null;
   const rows = (await res.json()) as DbProduct[];
   return rows.map((p) => ({
     id: p.id,
     name: p.name,
+    description: p.description ?? undefined,
     cat: p.cat,
     img: p.img,
     price: Number(p.price) || 0,
