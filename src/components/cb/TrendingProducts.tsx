@@ -38,11 +38,9 @@ export function TrendingProducts() {
 
     load();
     window.addEventListener("storage", load);
-    window.addEventListener("sdt-admin-unlocked", load as EventListener);
     window.addEventListener("sdt-products-updated", load as EventListener);
     return () => {
       window.removeEventListener("storage", load);
-      window.removeEventListener("sdt-admin-unlocked", load as EventListener);
       window.removeEventListener("sdt-products-updated", load as EventListener);
     };
   }, []);

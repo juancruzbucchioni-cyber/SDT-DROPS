@@ -18,25 +18,20 @@ const defaultOffers: Offer[] = [
 ];
 
 export function Offers() {
-  const [offers, setOffers] = useState<Offer[]>(defaultOffers);
+  const [offers, setOffers] = useState<Offer[]>([]);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Offer[];
-        if (Array.isArray(parsed) && parsed.length) setOffers(parsed);
+        setOffers(Array.isArray(parsed) ? parsed : []);
       }
     } catch {
-      // noop
+      setOffers([]);
     }
 
   }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(offers));
-    window.dispatchEvent(new CustomEvent("sdt-offers-updated"));
-  }, [offers]);
 
 
   return (

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import fallbackProductImage from "@/assets/productos/todos.png";
-import { Plus, Pencil, Trash2, Save, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { isCloudSyncEnabled } from "@/lib/cloud-sync";
 
 export type ProductItem = {
@@ -27,6 +27,8 @@ export type ColorStock = {
   color: string;
   stock: number;
 };
+
+const STORAGE_KEY = "sdt_drops_products_v3";
 
 export function getColorStock(product: ProductItem, selectedColor?: string) {
   if (!selectedColor || !product.colors?.length) return product.stock;
@@ -60,15 +62,6 @@ function resolveImageSrc(src?: string) {
   return fallbackProductImage;
 }
 
-function isStablePublicImageUrl(url: string) {
-  const value = url.trim();
-  if (!value) return false;
-  if (!/^https?:\/\//i.test(value)) return false;
-  const lower = value.toLowerCase();
-  if (lower.includes("token=") || lower.includes("x-amz-") || lower.includes("expires=") || lower.includes("signature=")) return false;
-  return true;
-}
-
 export function getUnitPrice(product: ProductItem, qty: number) {
   const tiers = (product.tierPrices ?? []).slice().sort((a, b) => a.minQty - b.minQty);
   for (const tier of tiers) {
@@ -77,204 +70,6 @@ export function getUnitPrice(product: ProductItem, qty: number) {
     if (matchesMin && matchesMax) return tier.unitPrice;
   }
   return product.price;
-}
-
-type OrderRecord = {
-  id: string;
-  createdAt: string;
-  total: number;
-  status?: "pending" | "confirmed" | "rejected";
-  items: Array<{ name: string; qty: number; price: number }>;
-};
-
-const STORAGE_KEY = "sdt_drops_products_v3";
-const ORDERS_STORAGE_KEY = "sdt_drops_orders_v1";
-
-const TYPO_RULES: Array<[RegExp, string]> = [
-  [/\bccelulares\b/gi, "celulares"],
-  [/\bcelulare\b/gi, "celulares"],
-  [/\breloje\b/gi, "relojes"],
-  [/\bacsesorios\b/gi, "accesorios"],
-  [/\baccesorios\b/gi, "accesorios"],
-  [/\bcosmetico\b/gi, "cosmetico"],
-  [/\bperfumez\b/gi, "perfumes"],
-  [/\bstanli\b/gi, "stanley"],
-  [/\bmayorissta\b/gi, "mayorista"],
-];
-
-function fixCommonTypos(text: string) {
-  return TYPO_RULES.reduce((acc, [pattern, replacement]) => acc.replace(pattern, replacement), text).replace(/\s{2,}/g, " ").trim();
-}
-
-const defaultProducts: ProductItem[] = [
-  { id: "cel-1", name: "Xiaomi Note 14 Pro+ 5G 12/512", price: 375, old: 410, img: "https://i02.appmifile.com/mi-com-product/fly-birds/redmi-note-14-pro-plus-5g/pc/2c8f4c7bb8e0a8f4e5c5c94c76f9f4e1.png", tag: "OFERTA", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-2", name: "Xiaomi Note 14 Pro+ 5G 8/256", price: 320, old: 350, img: "https://i02.appmifile.com/mi-com-product/fly-birds/redmi-note-14-pro-plus-5g/pc/2c8f4c7bb8e0a8f4e5c5c94c76f9f4e1.png", tag: "OFERTA", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-3", name: "Xiaomi Note 14 Pro 12/512", price: 280, old: 310, img: "https://i02.appmifile.com/mi-com-product/fly-birds/redmi-note-14-pro/pc/0f7e6f7d36e3f97d72e2e4db8cb4ce91.png", tag: "HOT", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-4", name: "Xiaomi Note 14 Pro 8/256", price: 235, old: 260, img: "https://i02.appmifile.com/mi-com-product/fly-birds/redmi-note-14-pro/pc/0f7e6f7d36e3f97d72e2e4db8cb4ce91.png", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-5", name: "Xiaomi Note 14 4G 8/256", price: 180, old: 204, img: "https://i02.appmifile.com/mi-com-product/fly-birds/redmi-note-14/pc/6a1df5c4b6a8cb63d31589f2cb1b5d2f.png", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-6", name: "Xiaomi Note 14 4G 6/128", price: 160, old: 185, img: "https://i02.appmifile.com/mi-com-product/fly-birds/redmi-note-14/pc/6a1df5c4b6a8cb63d31589f2cb1b5d2f.png", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-7", name: "Redmi 14C 16/256", price: 115, old: 138, img: "https://i02.appmifile.com/mi-com-product/fly-birds/redmi-14c/pc/4e4f9b3bcdbf6b8dc67e84e4e1cf89d3.png", tag: "OFERTA", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-8", name: "Redmi 15C 16/256", price: 150, old: 190, img: "https://i02.appmifile.com/mi-com-product/fly-birds/redmi-15c/pc/9b3b0ec84f4ab4f2df4d2b8bc3db20f4.png", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-9", name: "Redmi 15C 4/128", price: 120, old: 145, img: "https://i02.appmifile.com/mi-com-product/fly-birds/redmi-15c/pc/9b3b0ec84f4ab4f2df4d2b8bc3db20f4.png", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-10", name: "Redmi A5 8/128", price: 95, old: 120, img: "https://i02.appmifile.com/mi-com-product/fly-birds/redmi-a5/pc/76cb7ef53e7e7d8d5c74c65cfdce63e1.png", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-11", name: "Poco X7 5G 12/512", price: 280, old: 309, img: "https://i02.appmifile.com/mi-com-product/fly-birds/poco-x7-pro/pc/4f0d87d0b95ec4f8a5fdcb4f8a79e927.png", tag: "HOT", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-12", name: "Poco X7 Pro 5G 8/256", price: 299, old: 327, img: "https://i02.appmifile.com/mi-com-product/fly-birds/poco-x7-pro/pc/4f0d87d0b95ec4f8a5fdcb4f8a79e927.png", tag: "MAS VENDIDO", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-13", name: "Samsung A56 5G 8/256", price: 335, old: 370, img: "https://images.samsung.com/is/image/samsung/p6pim/ar/2501/gallery/ar-galaxy-a56-5g-sm-a566-538413-sm-a566elbgaro-thumb-544108239", tag: "MAS VENDIDO", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cel-14", name: "Motorola Edge 50 Fusion 5G 8/256", price: 235, old: 265, img: "https://motorolaimgrepo.vtexassets.com/arquivos/ids/163845-1200-auto", cat: "Celulares", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-1", name: "9PM", price: 45000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/9am.jpg", tag: "MAS VENDIDO", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-2", name: "9AM Dive", price: 47000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/9am.jpg", tag: "HOT", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-3", name: "Asad Bourbon", price: 44000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/asad%20bourbon.jpg", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-4", name: "Lattafa Khamrah", price: 45000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/kamrha.jpg", tag: "MAS VENDIDO", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-5", name: "Club de Nuit Intense Men 105ml", price: 53000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/kamrha.jpg", tag: "PREMIUM", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-6", name: "Mandarin Sky", price: 45000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/mandarin.jpg", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-7", name: "Candee", price: 41000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/candee%20odyssey.jpg", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-8", name: "Aqua", price: 42000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/candee%20odyssey.jpg", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-9", name: "Mega H", price: 48000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/mega.jpg", tag: "PREMIUM", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-10", name: "Bade Oud for Glory Negro", price: 42000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/PBqAJZABovy56b_fiBZB9NoGTfIQ0SyISFFsZDvIiTOE9nudt9E2uHFn2CeOiHUJyoSxn-u6vMgeNzZZkUhNQfZ1w8FRWvEpk0mLRshx538fS9pgqTX3HD0heixA0bXImZK-1NuUqmFZPuE-cD0uNzgFJbdCxMEQlJYzVFhaJKM.jpg", tag: "MAS VENDIDO", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-11", name: "Bade Honor & Glory Blanco", price: 42000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/Oqk3uIWZMwvzJLim-qh2hxopjFsx8juDks90ZWHV4eQhG9zmco4GvmKi-ntVUprRsENP97JydZ8gmV3ysvctHE2EwfeMsOWVC4drr5GL3NToDFr8b8K_855AK6lgCV2XOzP6ZtONWqfLli4SfgQZ9pCEsEwEUQQvXahG-j6MIag.jpg", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-12", name: "Fakhar Negro", price: 41000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/Oqk3uIWZMwvzJLim-qh2hxopjFsx8juDks90ZWHV4eQhG9zmco4GvmKi-ntVUprRsENP97JydZ8gmV3ysvctHE2EwfeMsOWVC4drr5GL3NToDFr8b8K_855AK6lgCV2XOzP6ZtONWqfLli4SfgQZ9pCEsEwEUQQvXahG-j6MIag.jpg", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-13", name: "Fakhar Dorado", price: 38000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/fakar%20dorado.jpg", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-14", name: "Fakhar Blanco", price: 41500, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/y2xTsFzqP6wP--v23lPfWMsDuAUyU7o2i-xMHHHCg6cwhaQCgIoKQetULy_yOGllqJUsqq9NGWdIYMzO3bmmAGblOahhOMZe_T-8tzBlHVvbS36BEVPGcEkCXL2Qt2AYdC4GJQ44IGEsnKVpTjS9xug-076WnzPrlhVeBAYxZL4.jpg", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-15", name: "Yara Candy", price: 40000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/yara-candy-29f6bbc62514bdbf1717284036084159-1024-1024.webp", tag: "HOT", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-16", name: "Yara Rosa Eau", price: 42000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/yara%20.jpg", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-17", name: "Eclaire", price: 44000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/yara-candy-29f6bbc62514bdbf1717284036084159-1024-1024.webp", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-18", name: "The Kingdom", price: 63000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/eclaire.jpg", tag: "PREMIUM", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-19", name: "Club de Nuit Elixir", price: 63500, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/2g2BTHn1I6kctrUJegNsyfAeeX0PqtUTh_-x070G0PSuBQPUo9pktNiKSIWevn1XPhZxTrRedml1QL4Tbd77KmrHJijLrWpOJplesVMVw2AplSn_jizfRr1b8U0PxBHgVuDIUhqpz0zmEF4IoG67L52lRKqFeN29q_gSFZ9wW8k.jpg", tag: "PREMIUM", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-20", name: "Bharara King EDP 100ml", price: 75000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/club%20nuit%20URBAN.jpg", tag: "PREMIUM", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-21", name: "French Avenue Liquid Brun", price: 63500, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/liquid%20brun.jpg", tag: "PREMIUM", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-22", name: "Al Haramain Amber Oud Gold 120ml", price: 71000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/haramain%20amber%20oud.jpg", tag: "EXCLUSIVO", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "perf-23", name: "Philos Pura", price: 42000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/philos.jpg", cat: "Perfumes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-1", name: "Set Hoppies 3 en 1 + Stickers", price: 11400, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/Set%20Hoppies%203%20en%201%20+%20Stickers.jpg", tag: "NUEVO", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-2", name: "Vaso Cafetero 500ml con Sensor de Temperatura", price: 13400, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/Set%20Hoppies%203%20en%201%20+%20Stickers.jpg", tag: "HOT", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-3", name: "Botella con Pico 350ml", price: 11000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/vaso%20cafe.jpg", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-4", name: "Botella con Pico 500ml", price: 11400, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/botellas%20pico.webp", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-5", name: "Botella con Pico 750ml", price: 11000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/botellas.jpg", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-6", name: "Botella con Filtro 800ml", price: 13400, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/botellas.jpg", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-7", name: "Botella con Pico 1000ml", price: 15650, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/botellas.jpg", tag: "PREMIUM", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-8", name: "Termo Stanley + Mate + Bombilla", price: 24500, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/botellas.jpg", tag: "MAS VENDIDO", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-9", name: "Termo Stanley Media Manija 1L", price: 14900, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/termo%20plateado.webp", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-10", name: "Termo Stanley 1.2L System Boca Ancha", price: 20000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/termo%20stanley.jpg", tag: "PREMIUM", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "st-11", name: "Vaso Quencher 1.2", price: 15200, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/vaso%20stanley.jpg", tag: "HOT", cat: "Stanley", stock: 50, compatibleModels: ["Universal"] },
-  { id: "rel-1", name: "Smartwatch 7 Mayas", price: 19000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/Smartwatch%207%20Mayas.png", tag: "HOT", cat: "Relojes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "rel-2", name: "Apple Watch", price: 31000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/Smartwatch%207%20Mayas.png", tag: "MAS VENDIDO", cat: "Relojes", stock: 50, compatibleModels: ["Universal"] },
-  { id: "acc-1", name: "Protectores de Camara", price: 3100, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/protect%20camara.jpg", cat: "Accesorios", stock: 50, compatibleModels: ["Universal"] },
-  { id: "acc-2", name: "Fundas Silicone Case MagSafe", price: 3300, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/fundas.webp", tag: "MAS VENDIDO", cat: "Accesorios", stock: 50, compatibleModels: ["Universal"] },
-  { id: "acc-3", name: "Vidrios Templados iPhone 11-17 Pro Max", price: 1930, img: "https://images.unsplash.com/photo-1512499617640-c74ae3a79d37?q=80&w=2000&auto=format&fit=crop", tag: "HOT", cat: "Accesorios", stock: 50, compatibleModels: ["Universal"] },
-  { id: "acc-4", name: "Cargador MagSafe", price: 13400, img: fallbackProductImage, cat: "Accesorios", stock: 50, compatibleModels: ["Universal"] },
-  { id: "acc-5", name: "Combo Cargador Apple", price: 8150, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/combo%20cargador.webp", tag: "MAS VENDIDO", cat: "Accesorios", stock: 50, compatibleModels: ["Universal"] },
-  { id: "acc-6", name: "Battery Pack", price: 15500, img: "https://images.unsplash.com/photo-1609592806596-b43f4c1b3c3b?q=80&w=2000&auto=format&fit=crop", tag: "PREMIUM", cat: "Accesorios", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cam-1", name: "Remera Argentina Suplente Tailandesa G5", price: 29000, img: fallbackProductImage, tag: "MAS VENDIDO", cat: "Camisetas", stock: 50, compatibleModels: ["Universal"] },
-  { id: "cam-2", name: "Camiseta Calidad Jugador G5 Tailandesa", price: 29000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/Camiseta%20Calidad%20Jugador%20G5%20Tailandesa.jpg", tag: "HOT", cat: "Camisetas", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-1", name: "AirPods Pro 2 con Sello", price: 18900, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/airpods%20sello.jpg", tag: "MAS VENDIDO", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-2", name: "AirPods Max", price: 35000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/airpods%20sello.jpg", tag: "PREMIUM", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-3", name: "Auriculares Xiaomi", price: 10000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/xiaomi.jpg", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-4", name: "JBL GO 4 / GO 4 RGB", price: 17800, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/jbl%20go%204.jpg", tag: "HOT", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-5", name: "JBL Flip 6", price: 34000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/jbl%20flip%20otro.jpg", tag: "MAS VENDIDO", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-6", name: "JBL Flip 7", price: 37000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/jbl%20flip%20otro.jpg", tag: "NUEVO", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-7", name: "Proyector 4K Ultra HD", price: 64000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/proyector.jpg", tag: "PREMIUM", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-8", name: "TV Stick con Magis TV", price: 38900, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/tv%20stick.jpg", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-9", name: "Camara Foco 360?", price: 18950, img: "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000&auto=format&fit=crop", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-10", name: "Game Stick 2.4 Wireless", price: 37900, img: fallbackProductImage, tag: "GAMER", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-11", name: "Aspiradora de Mano", price: 15000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/gamestick.jpg", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-12", name: "Maquina de Cortar Pelo Economica", price: 9500, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/maquina%20pelo.webp", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-13", name: "Aspiradora Robot", price: 30900, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/aspiradora%20robot.jpg", tag: "MAS VENDIDO", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-14", name: "ELFBAR 40K", price: 25000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/elfbar.jpg", tag: "HOT", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-15", name: "IGNITE V250 / V300", price: 25000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/v300.jpg", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-  { id: "may-16", name: "IGNITE V400", price: 30000, img: "https://kjtjnfsexziesxkfmaln.supabase.co/storage/v1/object/public/products/v400.jpg", tag: "PREMIUM", cat: "Mayorista", stock: 50, compatibleModels: ["Universal"] },
-];
-
-const sections = [
-  { id: "cat-celulares", title: "Celulares", cats: ["Celulares"] },
-  { id: "cat-perfumes", title: "Perfumes", cats: ["Perfumes"] },
-  { id: "cat-stanley", title: "Stanley", cats: ["Stanley"] },
-  { id: "cat-relojes", title: "Relojes", cats: ["Relojes"] },
-  { id: "cat-accesorios", title: "Accesorios", cats: ["Accesorios"] },
-  { id: "cat-camisetas", title: "Camisetas", cats: ["Camisetas"] },
-  { id: "cat-mayorista", title: "Mayorista", cats: ["Mayorista"] },
-];
-
-const categoryOptions = ["Celulares", "Perfumes", "Stanley", "Relojes", "Accesorios", "Camisetas", "Mayorista"];
-
-type ProductDraft = {
-  id?: string;
-  name: string;
-  price: string;
-  tierPrices: string;
-  colors: string;
-  old: string;
-  img: string;
-  tag: string;
-  cat: string;
-  stock: string;
-  compatibleModels: string;
-};
-
-const emptyDraft: ProductDraft = {
-  name: "",
-  price: "",
-  tierPrices: "",
-  colors: "",
-  old: "",
-  img: "",
-  tag: "",
-  cat: "Celulares",
-  stock: "1",
-  compatibleModels: "Universal",
-};
-
-function parseColorStocks(raw: string): ColorStock[] {
-  return raw
-    .split(",")
-    .map((x) => x.trim())
-    .filter(Boolean)
-    .map((item) => {
-      const [colorRaw, stockRaw] = item.split(":").map((x) => x.trim());
-      const stock = Number(stockRaw);
-      if (!colorRaw || !Number.isFinite(stock) || stock < 0) return null;
-      return { color: colorRaw, stock };
-    })
-    .filter((x): x is ColorStock => Boolean(x));
-}
-
-function serializeColorStocks(colors?: ColorStock[]) {
-  if (!colors?.length) return "";
-  return colors.map((c) => `${c.color}:${c.stock}`).join(", ");
-}
-
-function parseTierPrices(raw: string): TierPrice[] {
-  const items = raw
-    .split(",")
-    .map((x) => x.trim())
-    .filter(Boolean);
-  const parsed: TierPrice[] = [];
-  for (const item of items) {
-    const [rangePart, pricePart] = item.split(":").map((x) => x.trim());
-    if (!rangePart || !pricePart) continue;
-    const unitPrice = Number(pricePart);
-    if (!Number.isFinite(unitPrice) || unitPrice <= 0) continue;
-    if (rangePart.includes("+")) {
-      const minQty = Number(rangePart.replace("+", "").trim());
-      if (!Number.isFinite(minQty) || minQty <= 0) continue;
-      parsed.push({ minQty, unitPrice });
-      continue;
-    }
-    const [minRaw, maxRaw] = rangePart.split("-").map((x) => x.trim());
-    const minQty = Number(minRaw);
-    const maxQty = Number(maxRaw);
-    if (!Number.isFinite(minQty) || minQty <= 0) continue;
-    if (!Number.isFinite(maxQty) || maxQty < minQty) continue;
-    parsed.push({ minQty, maxQty, unitPrice });
-  }
-  return parsed.sort((a, b) => a.minQty - b.minQty);
-}
-
-function serializeTierPrices(tiers?: TierPrice[]) {
-  if (!tiers?.length) return "";
-  return tiers
-    .slice()
-    .sort((a, b) => a.minQty - b.minQty)
-    .map((t) => `${t.maxQty ? `${t.minQty}-${t.maxQty}` : `${t.minQty}+`}:${t.unitPrice}`)
-    .join(", ");
 }
 
 function formatPrice(value: number) {
@@ -286,58 +81,11 @@ function formatPrice(value: number) {
   }).format(value);
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" });
-}
-
-function normalizeOrderStatus(status?: string): "pending" | "confirmed" | "rejected" {
-  if (status === "confirmed" || status === "rejected") return status;
-  return "pending";
-}
-
-function toDraft(p: ProductItem): ProductDraft {
-  return {
-    id: p.id,
-    name: p.name,
-    price: String(p.price),
-    tierPrices: serializeTierPrices(p.tierPrices),
-    colors: serializeColorStocks(p.colors),
-    old: p.old ? String(p.old) : "",
-    img: p.img,
-    tag: p.tag ?? "",
-    cat: p.cat,
-    stock: String(p.stock),
-    compatibleModels: p.compatibleModels.join(", "),
-  };
-}
-
-function fromDraft(d: ProductDraft): ProductItem | null {
-  const price = Number(d.price);
-  const stock = Number(d.stock);
-  if (!d.name.trim() || !Number.isFinite(price) || price <= 0 || !d.cat.trim() || !Number.isFinite(stock) || stock < 0) return null;
-  const old = d.old.trim() ? Number(d.old) : undefined;
-  const models = d.compatibleModels.split(",").map((m) => m.trim()).filter(Boolean);
-  const tierPrices = parseTierPrices(d.tierPrices);
-  const colors = parseColorStocks(d.colors);
-  return {
-    id: d.id ?? `p_${Date.now()}`,
-    name: fixCommonTypos(d.name),
-    price,
-    tierPrices: tierPrices.length ? tierPrices : undefined,
-    colors: colors.length ? colors : undefined,
-    old: old && Number.isFinite(old) ? old : undefined,
-    img: d.img.trim() || fallbackProductImage,
-    tag: d.tag.trim() || undefined,
-    cat: fixCommonTypos(d.cat),
-    stock,
-    compatibleModels: models.length ? models : ["Universal"],
-  };
-}
-
 function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: number; onAddToCart: (product: ProductItem, color?: string) => void }) {
   const [selectedColor, setSelectedColor] = useState<string | undefined>(p.colors?.[0]?.color);
   const remaining = Math.max(0, getColorStock(p, selectedColor) - cartQty);
   const disabled = remaining <= 0;
+
   return (
     <article className="group relative flex flex-col border border-border/80 bg-card/55 backdrop-blur-sm glow-hover">
       <div className="relative aspect-square overflow-hidden">
@@ -397,63 +145,30 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   );
 }
 
+const sections = [
+  { id: "cat-celulares", title: "Celulares", cats: ["Celulares"] },
+  { id: "cat-perfumes", title: "Perfumes", cats: ["Perfumes"] },
+  { id: "cat-stanley", title: "Stanley", cats: ["Stanley"] },
+  { id: "cat-relojes", title: "Relojes", cats: ["Relojes"] },
+  { id: "cat-accesorios", title: "Accesorios", cats: ["Accesorios", "accesorios"] },
+  { id: "cat-camisetas", title: "Camisetas", cats: ["Camisetas"] },
+  { id: "cat-mayorista", title: "Mayorista", cats: ["Mayorista"] },
+];
+
 export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: ProductItem) => void; cartQtyById: Record<string, number> }) {
-  const [products, setProducts] = useState<ProductItem[]>(defaultProducts);
-  const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const [products, setProducts] = useState<ProductItem[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [adminMode] = useState(false);
-  const [adminUnlocked] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<ProductDraft>(emptyDraft);
-  const [error, setError] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
   const [isSyncReady, setIsSyncReady] = useState(!isCloudSyncEnabled());
 
   const loadProductsFromStorage = () => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as ProductItem[];
-      if (!Array.isArray(parsed) || !parsed.length) return;
-      const fixed = parsed.map((p) => ({
-        ...p,
-        name: fixCommonTypos(String(p.name ?? "")),
-        cat: fixCommonTypos(String(p.cat ?? "")),
-      }));
-      setProducts(fixed);
+      const parsed = raw ? (JSON.parse(raw) as ProductItem[]) : [];
+      setProducts(Array.isArray(parsed) ? parsed : []);
     } catch {
-      // noop
-    }
-  };
-
-  const loadOrders = () => {
-    try {
-      const raw = window.localStorage.getItem(ORDERS_STORAGE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as OrderRecord[]) : [];
-      const normalized = Array.isArray(parsed)
-        ? parsed
-            .map((o) => ({ ...o, status: normalizeOrderStatus(o.status) }))
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        : [];
-      setOrders(normalized);
-    } catch {
-      setOrders([]);
-    }
-  };
-
-  const updateOrderStatus = (id: string, status: "pending" | "confirmed" | "rejected") => {
-    try {
-      const raw = window.localStorage.getItem(ORDERS_STORAGE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as OrderRecord[]) : [];
-      if (!Array.isArray(parsed)) return;
-      const next = parsed.map((o) => (o.id === id ? { ...o, status } : o));
-      window.localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(next));
-      loadOrders();
-      window.dispatchEvent(new CustomEvent("sdt-order-created"));
-    } catch {
-      // noop
+      setProducts([]);
     }
   };
 
@@ -466,33 +181,19 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   useEffect(() => {
     try {
       loadProductsFromStorage();
-      loadOrders();
-    } catch {
-      // noop
     } finally {
       setIsHydrated(true);
     }
   }, []);
 
   useEffect(() => {
-    if (!isHydrated || !isSyncReady) return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-      window.dispatchEvent(new CustomEvent("sdt-products-updated"));
-    } catch {
-      setError("No se pudo guardar en el navegador. Reduce tamano/cantidad de imagenes.");
-    }
-  }, [products, isHydrated, isSyncReady]);
-
-  useEffect(() => {
-    const orderHandler = () => loadOrders();
     const storageHandler = (ev: StorageEvent) => {
       if (ev.key === STORAGE_KEY) loadProductsFromStorage();
     };
-    window.addEventListener("sdt-order-created", orderHandler as EventListener);
+    window.addEventListener("sdt-products-updated", loadProductsFromStorage as EventListener);
     window.addEventListener("storage", storageHandler);
     return () => {
-      window.removeEventListener("sdt-order-created", orderHandler as EventListener);
+      window.removeEventListener("sdt-products-updated", loadProductsFromStorage as EventListener);
       window.removeEventListener("storage", storageHandler);
     };
   }, []);
@@ -520,29 +221,9 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
     return byModel.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [products, selectedModel, searchTerm]);
 
-  const salesTotal = useMemo(() => orders.reduce((acc, o) => acc + o.total, 0), [orders]);
-  const salesItems = useMemo(() => orders.reduce((acc, o) => acc + o.items.reduce((s, i) => s + i.qty, 0), 0), [orders]);
-
-  const startEdit = (product: ProductItem) => { setEditingId(product.id); setDraft(toDraft(product)); setError(""); setAdminOpen(true); };
-  const resetDraft = () => { setEditingId(null); setDraft(emptyDraft); setError(""); };
-
-  const saveProduct = () => {
-    const parsed = fromDraft(draft);
-    if (!parsed) return setError("Completa nombre, categoria, precio y stock validos.");
-    if (!isStablePublicImageUrl(parsed.img)) return setError("La imagen debe ser URL publica estable (https) y no un link temporal con token.");
-    setProducts((prev) => prev.some((p) => p.id === parsed.id) ? prev.map((p) => (p.id === parsed.id ? parsed : p)) : [parsed, ...prev]);
-    resetDraft();
-  };
-
-  const deleteProduct = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-    if (editingId === id) resetDraft();
-  };
-
-  const onImageUpload = (file: File | undefined) => {
-    if (!file) return;
-    setError("Subi la imagen a Supabase Storage y pega la URL publica estable en el campo imagen.");
-  };
+  if (!isHydrated || !isSyncReady) {
+    return <section id="productos" className="relative border-b border-border py-24"><div className="mx-auto max-w-7xl px-4 md:px-8 text-sm text-muted-foreground">Cargando productos...</div></section>;
+  }
 
   return (
     <section id="productos" className="relative border-b border-border py-24">
@@ -561,80 +242,6 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
           </div>
         </div>
 
-        {adminMode && !adminUnlocked && (
-          <div className="mb-10 max-w-md border border-border bg-card/70 p-4">
-            <p className="font-display text-sm font-bold uppercase tracking-widest">Modo administrador detectado</p>
-            <p className="mt-2 text-sm text-muted-foreground">Desbloquea el acceso desde el boton "Admin" de la parte superior.</p>
-          </div>
-        )}
-
-        {adminMode && adminUnlocked && (
-          <>
-            <div className="mb-4 flex justify-end"><button onClick={() => setAdminOpen((v) => !v)} className="border border-primary bg-primary/90 px-4 py-2.5 font-display text-xs font-bold uppercase tracking-widest text-primary-foreground">{adminOpen ? "Ocultar gestion" : "Mostrar gestion"}</button></div>
-            {adminOpen && (
-              <div className="mb-10 space-y-6 border border-border bg-card/70 p-4">
-                <div>
-                  <h3 className="mb-3 font-display text-xl font-bold uppercase">Ventas y pedidos</h3>
-                  <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <div className="border border-border bg-background/50 p-3"><p className="text-xs uppercase tracking-widest text-muted-foreground">Pedidos totales</p><p className="mt-1 font-display text-2xl font-bold text-neon">{orders.length}</p></div>
-                    <div className="border border-border bg-background/50 p-3"><p className="text-xs uppercase tracking-widest text-muted-foreground">Productos vendidos</p><p className="mt-1 font-display text-2xl font-bold text-neon">{salesItems}</p></div>
-                    <div className="border border-border bg-background/50 p-3"><p className="text-xs uppercase tracking-widest text-muted-foreground">Total vendido</p><p className="mt-1 font-display text-2xl font-bold text-neon">{formatPrice(salesTotal)}</p></div>
-                  </div>
-                  <div className="max-h-[240px] space-y-2 overflow-auto pr-1">
-                    {orders.length === 0 && <p className="text-sm text-muted-foreground">Todavia no hay pedidos registrados.</p>}
-                    {orders.map((o) => (
-                      <div key={o.id} className="border border-border bg-background/50 p-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="font-display text-sm font-bold uppercase text-neon">{o.id}</p>
-                          <p className="text-xs text-muted-foreground">{formatDate(o.createdAt)}</p>
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">Items: {o.items.map((i) => `${i.name} x${i.qty}`).join(" | ")}</p>
-                        <p className="mt-1 font-display text-sm font-bold">Total: {formatPrice(o.total)}</p>
-                        <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <span className={`border px-2 py-1 text-[10px] font-bold uppercase tracking-widest ${o.status === "confirmed" ? "border-emerald-400/60 text-emerald-300" : o.status === "rejected" ? "border-red-400/60 text-red-300" : "border-amber-400/60 text-amber-300"}`}>
-                            {o.status === "confirmed" ? "Confirmado" : o.status === "rejected" ? "Rechazado" : "Pendiente"}
-                          </span>
-                          <button onClick={() => updateOrderStatus(o.id, "confirmed")} className="border border-emerald-400/60 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-300">Confirmar</button>
-                          <button onClick={() => updateOrderStatus(o.id, "pending")} className="border border-amber-400/60 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-300">Pendiente</button>
-                          <button onClick={() => updateOrderStatus(o.id, "rejected")} className="border border-red-400/60 px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-red-300">Rechazar</button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-[1.1fr_1fr]">
-                  <div>
-                    <h3 className="mb-3 font-display text-xl font-bold uppercase">{editingId ? "Editar producto" : "Nuevo producto"}</h3>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <input value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} placeholder="Nombre del producto" className="border border-border bg-background px-3 py-2 text-sm sm:col-span-2" />
-                      <input value={draft.price} onChange={(e) => setDraft((p) => ({ ...p, price: e.target.value }))} placeholder="Precio" className="border border-border bg-background px-3 py-2 text-sm" />
-                      <input value={draft.tierPrices} onChange={(e) => setDraft((p) => ({ ...p, tierPrices: e.target.value }))} placeholder="Precios por tramo: 1-10:10000,11-30:9500,31+:9000" className="border border-border bg-background px-3 py-2 text-sm sm:col-span-2" />
-                      <input value={draft.stock} onChange={(e) => setDraft((p) => ({ ...p, stock: e.target.value }))} placeholder="Stock" className="border border-border bg-background px-3 py-2 text-sm" />
-                      <input value={draft.colors} onChange={(e) => setDraft((p) => ({ ...p, colors: e.target.value }))} placeholder="Colores (opcional): negro:10, rojo:6, #1e90ff:8" className="border border-border bg-background px-3 py-2 text-sm" />
-                      <input value={draft.old} onChange={(e) => setDraft((p) => ({ ...p, old: e.target.value }))} placeholder="Precio anterior (opcional)" className="border border-border bg-background px-3 py-2 text-sm" />
-                      <select value={draft.cat} onChange={(e) => setDraft((p) => ({ ...p, cat: e.target.value }))} className="border border-border bg-background px-3 py-2 text-sm">{categoryOptions.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select>
-                      <input value={draft.tag} onChange={(e) => setDraft((p) => ({ ...p, tag: e.target.value }))} placeholder="Etiqueta (ej: NUEVO)" className="border border-border bg-background px-3 py-2 text-sm" />
-                      <input value={draft.compatibleModels} onChange={(e) => setDraft((p) => ({ ...p, compatibleModels: e.target.value }))} placeholder="Modelos compatibles (separados por coma)" className="border border-border bg-background px-3 py-2 text-sm sm:col-span-2" />
-                      <input value={draft.img} onChange={(e) => setDraft((p) => ({ ...p, img: e.target.value }))} placeholder="URL publica estable (https) de Supabase Storage" className="border border-border bg-background px-3 py-2 text-sm sm:col-span-2" />
-                      <div className="sm:col-span-2"><label className="mb-1 block text-xs uppercase tracking-widest text-muted-foreground">archivo local (no recomendado)</label><input type="file" accept="image/*" onChange={(e) => onImageUpload(e.target.files?.[0])} className="w-full border border-border bg-background px-3 py-2 text-sm" /></div>
-                    </div>
-                    {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
-                    <div className="mt-4 flex flex-wrap gap-2"><button onClick={saveProduct} className="inline-flex items-center gap-2 border border-primary bg-primary px-4 py-2 font-display text-xs font-bold uppercase tracking-widest text-primary-foreground"><Save className="h-4 w-4" /> Guardar</button><button onClick={resetDraft} className="inline-flex items-center gap-2 border border-border px-4 py-2 font-display text-xs font-bold uppercase tracking-widest text-foreground"><X className="h-4 w-4" /> Limpiar</button></div>
-                  </div>
-
-                  <div>
-                    <h3 className="mb-3 font-display text-xl font-bold uppercase">Publicaciones cargadas</h3>
-                    <div className="max-h-[420px] space-y-2 overflow-auto pr-1">
-                      {products.map((p) => <div key={p.id} className="flex items-center gap-3 border border-border bg-background/50 p-2"><div className="h-12 w-12 shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${p.img})` }} /><div className="min-w-0 flex-1"><p className="truncate font-display text-xs font-bold uppercase">{p.name}</p><p className="text-xs text-muted-foreground">{formatPrice(p.price)} Ã‚Â· Stock {p.stock}</p></div><button onClick={() => startEdit(p)} className="grid h-8 w-8 place-items-center border border-border hover:border-primary"><Pencil className="h-4 w-4" /></button><button onClick={() => deleteProduct(p.id)} className="grid h-8 w-8 place-items-center border border-border hover:border-primary"><Trash2 className="h-4 w-4" /></button></div>)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
         {selectedModel && <p className="mb-8 text-sm text-muted-foreground">Mostrando productos filtrados por <span className="font-bold text-neon">{selectedModel}</span>.</p>}
 
         <div className="space-y-12">
@@ -650,15 +257,9 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
               </div>
             );
           })}
-          {filteredProducts.length === 0 && <div className="border border-border bg-card/60 p-6 text-center"><p className="font-display text-lg font-bold uppercase">No hay productos para ese filtro</p><p className="mt-2 text-sm text-muted-foreground">Proba otra opcion o deja \"Ver todos los productos\".</p></div>}
+          {filteredProducts.length === 0 && <div className="border border-border bg-card/60 p-6 text-center"><p className="font-display text-lg font-bold uppercase">No hay productos para ese filtro</p><p className="mt-2 text-sm text-muted-foreground">Carga productos en Supabase para mostrarlos aqui.</p></div>}
         </div>
       </div>
     </section>
   );
 }
-
-
-
-
-
-
