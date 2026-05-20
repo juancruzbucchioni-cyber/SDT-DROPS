@@ -102,7 +102,11 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
         />
         <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
         {p.tag && <span className="absolute left-3 top-3 border border-primary bg-background/80 px-2 py-1 font-display text-[10px] font-bold tracking-widest text-neon backdrop-blur">{p.tag}</span>}
-        <button disabled={disabled} onClick={() => onAddToCart(p, selectedColor)} className="absolute inset-x-3 bottom-3 inline-flex translate-y-3 items-center justify-center gap-2 border border-primary bg-primary/95 px-4 py-3 font-display text-xs font-bold uppercase tracking-widest text-primary-foreground opacity-0 transition-all group-hover:translate-y-0 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60">
+        <button
+          disabled={disabled}
+          onClick={() => onAddToCart(p, selectedColor)}
+          className="absolute inset-x-3 bottom-3 inline-flex translate-y-0 items-center justify-center gap-2 border border-primary bg-primary/95 px-4 py-3 font-display text-xs font-bold uppercase tracking-widest text-primary-foreground opacity-100 transition-all lg:translate-y-3 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
           <Plus className="h-4 w-4" /> {disabled ? "Sin stock" : "Anadir al carrito"}
         </button>
       </div>
