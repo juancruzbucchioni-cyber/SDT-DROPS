@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import fallbackProductImage from "@/assets/productos/todos.png";
 import { Plus, Pencil, Trash2, Save, X } from "lucide-react";
+import { isCloudSyncEnabled } from "@/lib/cloud-sync";
 
 export type ProductItem = {
   id: string;
@@ -88,8 +89,6 @@ type OrderRecord = {
 
 const STORAGE_KEY = "sdt_drops_products_v3";
 const ORDERS_STORAGE_KEY = "sdt_drops_orders_v1";
-const ADMIN_SESSION_KEY = "sdt_drops_admin_ok";
-const ADMIN_PASSWORD = "Santiago.villalba2025";
 
 const TYPO_RULES: Array<[RegExp, string]> = [
   [/\bccelulares\b/gi, "celulares"],
@@ -403,13 +402,14 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [adminMode, setAdminMode] = useState(false);
-  const [adminUnlocked, setAdminUnlocked] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(true);
+  const [adminMode] = useState(false);
+  const [adminUnlocked] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<ProductDraft>(emptyDraft);
   const [error, setError] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isSyncReady, setIsSyncReady] = useState(!isCloudSyncEnabled());
 
   const loadProductsFromStorage = () => {
     try {
@@ -458,12 +458,14 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   };
 
   useEffect(() => {
+    const readyHandler = () => setIsSyncReady(true);
+    window.addEventListener("sdt-cloud-sync-ready", readyHandler as EventListener);
+    return () => window.removeEventListener("sdt-cloud-sync-ready", readyHandler as EventListener);
+  }, []);
+
+  useEffect(() => {
     try {
       loadProductsFromStorage();
-      const params = new URLSearchParams(window.location.search);
-      const isAdminParam = params.get("admin") === "1";
-      setAdminMode(isAdminParam);
-      setAdminUnlocked(isAdminParam && window.sessionStorage.getItem(ADMIN_SESSION_KEY) === "ok");
       loadOrders();
     } catch {
       // noop
@@ -473,27 +475,24 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   }, []);
 
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isHydrated || !isSyncReady) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
       window.dispatchEvent(new CustomEvent("sdt-products-updated"));
     } catch {
       setError("No se pudo guardar en el navegador. Reduce tamano/cantidad de imagenes.");
     }
-  }, [products, isHydrated]);
+  }, [products, isHydrated, isSyncReady]);
 
   useEffect(() => {
     const orderHandler = () => loadOrders();
-    const adminHandler = () => setAdminUnlocked(true);
     const storageHandler = (ev: StorageEvent) => {
       if (ev.key === STORAGE_KEY) loadProductsFromStorage();
     };
     window.addEventListener("sdt-order-created", orderHandler as EventListener);
-    window.addEventListener("sdt-admin-unlocked", adminHandler as EventListener);
     window.addEventListener("storage", storageHandler);
     return () => {
       window.removeEventListener("sdt-order-created", orderHandler as EventListener);
-      window.removeEventListener("sdt-admin-unlocked", adminHandler as EventListener);
       window.removeEventListener("storage", storageHandler);
     };
   }, []);

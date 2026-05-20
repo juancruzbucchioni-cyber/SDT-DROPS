@@ -6,7 +6,7 @@ import type { ProductItem } from "@/components/cb/Products";
 const STORAGE_KEY = "sdt_drops_products_v3";
 
 export function Categories() {
-  const [categories, setCategories] = useState<CategoryItem[]>(defaultCategories);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [products, setProducts] = useState<ProductItem[]>([]);
 
   useEffect(() => {
@@ -16,10 +16,10 @@ export function Categories() {
         const parsedCategories = rawCategories ? (JSON.parse(rawCategories) as CategoryItem[]) : [];
         const rawProducts = window.localStorage.getItem(STORAGE_KEY);
         const parsedProducts = rawProducts ? (JSON.parse(rawProducts) as ProductItem[]) : [];
-        setCategories(Array.isArray(parsedCategories) && parsedCategories.length ? parsedCategories : defaultCategories);
+        setCategories(Array.isArray(parsedCategories) ? parsedCategories : []);
         setProducts(Array.isArray(parsedProducts) ? parsedProducts : []);
       } catch {
-        setCategories(defaultCategories);
+        setCategories([]);
         setProducts([]);
       }
     };

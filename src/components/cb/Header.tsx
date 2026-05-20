@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, ShoppingBag, Plus, Minus, Trash2, Lock } from "lucide-react";
+import { Menu, ShoppingBag, Plus, Minus, Trash2 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import type { CartItem } from "@/routes/index";
 import type { ProductItem } from "@/components/cb/Products";
@@ -18,8 +18,6 @@ const catalogLinks = [
 ];
 
 const ORDERS_STORAGE_KEY = "sdt_drops_orders_v1";
-const ADMIN_SESSION_KEY = "sdt_drops_admin_ok";
-const ADMIN_PASSWORD = (import.meta.env.VITE_ADMIN_PASSWORD as string | undefined) ?? "";
 
 function formatPrice(value: number) {
   return new Intl.NumberFormat("es-AR", {
@@ -52,11 +50,6 @@ type OrderRecord = {
 export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, onUpdateColor, onRemove, onClear }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [compact, setCompact] = useState(false);
-  const [adminMode, setAdminMode] = useState(false);
-  const [adminUnlocked, setAdminUnlocked] = useState(false);
-  const [adminModalOpen, setAdminModalOpen] = useState(false);
-  const [adminPass, setAdminPass] = useState("");
-  const [adminError, setAdminError] = useState("");
   const lineKey = (item: CartItem) => `${item.id}::${item.selectedColor ?? "sin-color"}`;
 
   useEffect(() => {
@@ -67,35 +60,12 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
   }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const enabled = params.get("admin") === "1";
-    setAdminMode(enabled);
-    setAdminUnlocked(enabled && window.sessionStorage.getItem(ADMIN_SESSION_KEY) === "ok");
-  }, []);
-
-  useEffect(() => {
     const onKeyDown = (ev: KeyboardEvent) => {
       if (ev.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-
-  const unlockAdmin = () => {
-    if (!ADMIN_PASSWORD) {
-      setAdminError("Configura VITE_ADMIN_PASSWORD en variables de entorno.");
-      return;
-    }
-    if (adminPass === ADMIN_PASSWORD) {
-      window.sessionStorage.setItem(ADMIN_SESSION_KEY, "ok");
-      setAdminUnlocked(true);
-      setAdminError("");
-      setAdminModalOpen(false);
-      window.dispatchEvent(new CustomEvent("sdt-admin-unlocked"));
-      return;
-    }
-    setAdminError("Clave incorrecta.");
-  };
 
   const handleCheckout = () => {
     if (!cart.length) return;
@@ -158,18 +128,6 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl">
-      {adminMode && (
-        <div className="border-b border-border/60">
-          <div className="mx-auto flex max-w-7xl justify-end px-4 py-1 md:px-8">
-            <button
-              onClick={() => setAdminModalOpen(true)}
-              className="inline-flex items-center gap-1 border border-border bg-card/60 px-2 py-1 font-display text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-neon"
-            >
-              <Lock className="h-3 w-3" /> {adminUnlocked ? "Admin activo" : "Admin"}
-            </button>
-          </div>
-        </div>
-      )}
 
       {!compact && (
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
@@ -243,30 +201,6 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
         </div>
       )}
 
-      {adminMode && adminModalOpen && (
-        <div className="fixed inset-0 z-[100] grid place-items-center bg-black/65 p-4">
-          <div className="w-full max-w-sm border border-border bg-card p-4 shadow-2xl">
-            <h3 className="font-display text-lg font-bold uppercase">Acceso administrador</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Ingresa la clave para habilitar el panel admin.</p>
-            <input
-              type="password"
-              value={adminPass}
-              onChange={(e) => setAdminPass(e.target.value)}
-              placeholder="Clave"
-              className="mt-3 w-full border border-border bg-background px-3 py-2 text-sm"
-            />
-            {adminError && <p className="mt-2 text-sm text-red-300">{adminError}</p>}
-            <div className="mt-4 flex justify-end gap-2">
-              <button onClick={() => setAdminModalOpen(false)} className="border border-border px-3 py-2 text-xs font-bold uppercase tracking-widest">
-                Cancelar
-              </button>
-              <button onClick={unlockAdmin} className="border border-primary bg-primary px-3 py-2 text-xs font-bold uppercase tracking-widest text-primary-foreground">
-                Entrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }

@@ -1,9 +1,5 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
-const LOCAL_ONLY_MODE = (import.meta.env.VITE_LOCAL_ONLY_MODE as string | undefined) === "1";
-
-const TABLE = "sdt_app_state";
-const ROW_ID = "main";
 
 const KEYS = {
   products: "sdt_drops_products_v3",
@@ -14,11 +10,10 @@ const KEYS = {
 };
 
 let initialized = false;
-let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let syncReady = false;
 
 function isEnabled() {
-  return !LOCAL_ONLY_MODE && Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 }
 
 export function isCloudSyncEnabled() {
@@ -38,69 +33,6 @@ function restHeaders() {
   };
 }
 
-function parseOrNull(value: string | null) {
-  if (!value) return null;
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
-}
-
-function readLocalState() {
-  return {
-    products: parseOrNull(window.localStorage.getItem(KEYS.products)),
-    orders: parseOrNull(window.localStorage.getItem(KEYS.orders)),
-    categories: parseOrNull(window.localStorage.getItem(KEYS.categories)),
-    offers: parseOrNull(window.localStorage.getItem(KEYS.offers)),
-    cart: parseOrNull(window.localStorage.getItem(KEYS.cart)),
-  };
-}
-
-function hasAnyLocalData(state: ReturnType<typeof readLocalState>) {
-  return Object.values(state).some((v) => v !== null && v !== undefined);
-}
-
-function hasMeaningfulData(value: unknown) {
-  if (Array.isArray(value)) return value.length > 0;
-  if (value && typeof value === "object") return Object.keys(value as Record<string, unknown>).length > 0;
-  return value !== null && value !== undefined;
-}
-
-function hasMeaningfulCloudData(payload: unknown) {
-  if (!payload || typeof payload !== "object") return false;
-  const obj = payload as Record<string, unknown>;
-  return Object.values(obj).some(hasMeaningfulData);
-}
-
-function writeLocalState(payload: Partial<Record<keyof ReturnType<typeof readLocalState>, unknown>>) {
-  if (payload.products !== undefined) window.localStorage.setItem(KEYS.products, JSON.stringify(payload.products));
-  if (payload.orders !== undefined) window.localStorage.setItem(KEYS.orders, JSON.stringify(payload.orders));
-  if (payload.categories !== undefined) window.localStorage.setItem(KEYS.categories, JSON.stringify(payload.categories));
-  if (payload.offers !== undefined) window.localStorage.setItem(KEYS.offers, JSON.stringify(payload.offers));
-  if (payload.cart !== undefined) window.localStorage.setItem(KEYS.cart, JSON.stringify(payload.cart));
-}
-
-async function fetchCloudState() {
-  const url = `${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.${ROW_ID}&select=id,payload`;
-  const res = await fetch(url, { headers: restHeaders() });
-  if (!res.ok) return null;
-  const rows = (await res.json()) as Array<{ id: string; payload?: Record<string, unknown> }>;
-  return rows[0]?.payload ?? null;
-}
-
-async function saveCloudState() {
-  if (!isEnabled()) return;
-  const payload = readLocalState();
-  const body = [{ id: ROW_ID, payload, updated_at: new Date().toISOString() }];
-  const url = `${SUPABASE_URL}/rest/v1/${TABLE}?on_conflict=id`;
-  await fetch(url, {
-    method: "POST",
-    headers: { ...restHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" },
-    body: JSON.stringify(body),
-  });
-}
-
 function dispatchRefreshEvents() {
   window.dispatchEvent(new CustomEvent("sdt-products-updated"));
   window.dispatchEvent(new CustomEvent("sdt-categories-updated"));
@@ -109,11 +41,55 @@ function dispatchRefreshEvents() {
   window.dispatchEvent(new CustomEvent("sdt-cart-updated"));
 }
 
-function scheduleSave() {
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    void saveCloudState();
-  }, 600);
+type DbProduct = {
+  id: string;
+  name: string;
+  cat: string;
+  img: string;
+  price: number;
+  old?: number | null;
+  tag?: string | null;
+  stock: number;
+  compatible_models?: string[] | null;
+  colors?: unknown;
+  tier_prices?: unknown;
+};
+
+type DbCategory = { id: string; name: string; img: string; order: number };
+type DbOffer = { id: string; title: string; description: string; badge: string; img?: string | null };
+
+async function fetchProducts() {
+  const url = `${SUPABASE_URL}/rest/v1/products?select=id,name,cat,img,price,old,tag,stock,compatible_models,colors,tier_prices`;
+  const res = await fetch(url, { headers: restHeaders() });
+  if (!res.ok) return null;
+  const rows = (await res.json()) as DbProduct[];
+  return rows.map((p) => ({
+    id: p.id,
+    name: p.name,
+    cat: p.cat,
+    img: p.img,
+    price: Number(p.price) || 0,
+    old: p.old === null || p.old === undefined ? undefined : Number(p.old),
+    tag: p.tag ?? undefined,
+    stock: Number(p.stock) || 0,
+    compatibleModels: Array.isArray(p.compatible_models) && p.compatible_models.length ? p.compatible_models : ["Universal"],
+    colors: Array.isArray(p.colors) ? p.colors : undefined,
+    tierPrices: Array.isArray(p.tier_prices) ? p.tier_prices : undefined,
+  }));
+}
+
+async function fetchCategories() {
+  const url = `${SUPABASE_URL}/rest/v1/categories?select=id,name,img,order&order=order.asc`;
+  const res = await fetch(url, { headers: restHeaders() });
+  if (!res.ok) return null;
+  return (await res.json()) as DbCategory[];
+}
+
+async function fetchOffers() {
+  const url = `${SUPABASE_URL}/rest/v1/offers?select=id,title,description,badge,img`;
+  const res = await fetch(url, { headers: restHeaders() });
+  if (!res.ok) return null;
+  return (await res.json()) as DbOffer[];
 }
 
 export async function initializeCloudSync() {
@@ -128,26 +104,16 @@ export async function initializeCloudSync() {
   }
 
   try {
-    const localState = readLocalState();
-    const cloudPayload = await fetchCloudState();
-
-    if (cloudPayload && hasMeaningfulCloudData(cloudPayload)) {
-      writeLocalState(cloudPayload as Partial<Record<keyof ReturnType<typeof readLocalState>, unknown>>);
-      dispatchRefreshEvents();
-    } else if (hasAnyLocalData(localState)) {
-      await saveCloudState();
-    }
+    const [products, categories, offers] = await Promise.all([fetchProducts(), fetchCategories(), fetchOffers()]);
+    window.localStorage.setItem(KEYS.products, JSON.stringify(products ?? []));
+    window.localStorage.setItem(KEYS.categories, JSON.stringify(categories ?? []));
+    window.localStorage.setItem(KEYS.offers, JSON.stringify(offers ?? []));
+    dispatchRefreshEvents();
   } catch {
-    // keep local mode silently
+    window.localStorage.setItem(KEYS.products, JSON.stringify([]));
+    window.localStorage.setItem(KEYS.categories, JSON.stringify([]));
+    window.localStorage.setItem(KEYS.offers, JSON.stringify([]));
+    dispatchRefreshEvents();
   }
-
-  const watched = [
-    "sdt-products-updated",
-    "sdt-categories-updated",
-    "sdt-order-created",
-    "sdt-offers-updated",
-    "sdt-cart-updated",
-  ];
-  watched.forEach((eventName) => window.addEventListener(eventName, scheduleSave as EventListener));
   markSyncReady();
 }
