@@ -228,8 +228,10 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
       ? products
       : products.filter((p) => p.compatibleModels.includes(selectedModel) || p.compatibleModels.includes("Universal"));
     const byCategory = !selectedCategory ? byModel : byModel.filter((p) => p.cat === selectedCategory);
-    if (!searchTerm) return byCategory;
-    return byCategory.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const bySearch = !searchTerm
+      ? byCategory
+      : byCategory.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return bySearch.slice().sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }));
   }, [products, selectedModel, selectedCategory, searchTerm]);
 
   if (!isHydrated || !isSyncReady) {

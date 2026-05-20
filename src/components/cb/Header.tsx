@@ -50,6 +50,7 @@ type OrderRecord = {
 export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, onUpdateColor, onRemove, onClear }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [compact, setCompact] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const lineKey = (item: CartItem) => `${item.id}::${item.selectedColor ?? "sin-color"}`;
 
   useEffect(() => {
@@ -66,6 +67,10 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("sdt-product-search", { detail: { term: searchTerm } }));
+  }, [searchTerm]);
 
   const handleCheckout = () => {
     if (!cart.length) return;
@@ -194,8 +199,19 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
             </a>
           ))}
 
+          <div className="ml-auto min-w-[190px] shrink-0 sm:min-w-[240px] md:min-w-[300px]">
+            <input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar producto..."
+              className={`w-full border border-border bg-card/70 text-foreground outline-none focus:border-primary ${
+                compact ? "px-2 py-1 text-[11px]" : "px-3 py-1.5 text-xs"
+              }`}
+            />
+          </div>
+
           {compact && (
-            <button onClick={() => setOpen((v) => !v)} aria-label="Carrito" className="relative ml-auto grid h-7 w-7 shrink-0 place-items-center border border-border text-muted-foreground hover:text-neon">
+            <button onClick={() => setOpen((v) => !v)} aria-label="Carrito" className="relative grid h-7 w-7 shrink-0 place-items-center border border-border text-muted-foreground hover:text-neon">
               <ShoppingBag className="h-4 w-4" />
               <span className="absolute -right-1 -top-1 grid h-3.5 w-3.5 place-items-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">{cartCount}</span>
             </button>

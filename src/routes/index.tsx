@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/cb/Header";
 import { Hero } from "@/components/cb/Hero";
-import { Categories } from "@/components/cb/Categories";
 import { Products, getColorStock, getUnitPrice, type ProductItem } from "@/components/cb/Products";
 import { Instagram } from "@/components/cb/Instagram";
 import { Contact } from "@/components/cb/Contact";
@@ -132,7 +131,6 @@ function Index() {
       <Hero />
       <ProductLines />
       <TrendingProducts />
-      <Categories />
       <Products onAddToCart={addToCart} cartQtyById={cartQtyById} />
       <Instagram />
       <Contact />
