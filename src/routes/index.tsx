@@ -8,7 +8,6 @@ import { Instagram } from "@/components/cb/Instagram";
 import { Contact } from "@/components/cb/Contact";
 import { Footer } from "@/components/cb/Footer";
 import { ProductLines } from "@/components/cb/ProductLines";
-import { Offers } from "@/components/cb/Offers";
 import { TrendingProducts } from "@/components/cb/TrendingProducts";
 import { initializeCloudSync } from "@/lib/cloud-sync";
 import backgroundMain from "@/assets/background-main.png";
@@ -100,8 +99,18 @@ function Index() {
   const clearCart = () => setCart([]);
 
   const cartCount = useMemo(() => cart.reduce((acc, i) => acc + i.qty, 0), [cart]);
-  const cartTotal = useMemo(() => cart.reduce((acc, i) => acc + getUnitPrice(i, i.qty) * i.qty, 0), [cart]);
-  const cartQtyById = useMemo(() => Object.fromEntries(cart.map((i) => [i.id, i.qty])), [cart]);
+  const cartQtyById = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const item of cart) {
+      map[item.id] = (map[item.id] ?? 0) + item.qty;
+    }
+    return map;
+  }, [cart]);
+
+  const cartTotal = useMemo(
+    () => cart.reduce((acc, i) => acc + getUnitPrice(i, cartQtyById[i.id] ?? i.qty) * i.qty, 0),
+    [cart, cartQtyById],
+  );
 
   return (
     <main className="relative min-h-screen text-foreground">
@@ -122,7 +131,6 @@ function Index() {
       />
       <Hero />
       <ProductLines />
-      <Offers />
       <TrendingProducts />
       <Categories />
       <Products onAddToCart={addToCart} cartQtyById={cartQtyById} />

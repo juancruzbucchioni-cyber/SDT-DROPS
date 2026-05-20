@@ -69,6 +69,10 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
 
   const handleCheckout = () => {
     if (!cart.length) return;
+    const qtyByProductId = cart.reduce<Record<string, number>>((acc, item) => {
+      acc[item.id] = (acc[item.id] ?? 0) + item.qty;
+      return acc;
+    }, {});
 
     const existingRaw = window.localStorage.getItem(ORDERS_STORAGE_KEY);
     const existingOrders: OrderRecord[] = existingRaw ? JSON.parse(existingRaw) : [];
@@ -79,7 +83,11 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
       createdAt: new Date().toISOString(),
       total: cartTotal,
       status: "pending",
-      items: cart.map((i) => ({ name: `${i.name}${i.selectedColor ? ` (${i.selectedColor})` : ""}`, qty: i.qty, price: getUnitPrice(i, i.qty) })),
+      items: cart.map((i) => ({
+        name: `${i.name}${i.selectedColor ? ` (${i.selectedColor})` : ""}`,
+        qty: i.qty,
+        price: getUnitPrice(i, qtyByProductId[i.id] ?? i.qty),
+      })),
     };
 
     // Descontar stock real del catalogo (incluyendo color si aplica)
@@ -219,6 +227,10 @@ type CartPanelProps = {
 
 function CartPanel({ cart, cartTotal, onIncrement, onDecrement, onUpdateColor, onRemove, onClear, onCheckout, compact = false }: CartPanelProps) {
   const lineKey = (item: CartItem) => `${item.id}::${item.selectedColor ?? "sin-color"}`;
+  const qtyByProductId = cart.reduce<Record<string, number>>((acc, item) => {
+    acc[item.id] = (acc[item.id] ?? 0) + item.qty;
+    return acc;
+  }, {});
   return (
     <div className={`${compact ? "relative" : "absolute right-0 top-12"} z-50 w-[330px] border border-border bg-card p-4 shadow-2xl md:w-[380px]`}>
       <div className="mb-3 flex items-center justify-between">
@@ -254,7 +266,7 @@ function CartPanel({ cart, cartTotal, onIncrement, onDecrement, onUpdateColor, o
                   ))}
                 </select>
               ) : null}
-              <p className="mt-1 text-sm text-neon">{formatPrice(getUnitPrice(item, item.qty))} c/u</p>
+              <p className="mt-1 text-sm text-neon">{formatPrice(getUnitPrice(item, qtyByProductId[item.id] ?? item.qty))} c/u</p>
               <p className="text-xs text-muted-foreground">Stock: {item.qty}/{getColorStock(item, item.selectedColor)}</p>
               <div className="mt-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -266,7 +278,7 @@ function CartPanel({ cart, cartTotal, onIncrement, onDecrement, onUpdateColor, o
                     <Plus className="h-3 w-3" />
                   </button>
                 </div>
-                <span className="font-display text-sm font-bold">{formatPrice(getUnitPrice(item, item.qty) * item.qty)}</span>
+                <span className="font-display text-sm font-bold">{formatPrice(getUnitPrice(item, qtyByProductId[item.id] ?? item.qty) * item.qty)}</span>
               </div>
             </div>
           ))}

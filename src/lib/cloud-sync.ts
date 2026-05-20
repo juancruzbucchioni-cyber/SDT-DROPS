@@ -8,7 +8,6 @@ const KEYS = {
   products: "sdt_drops_products_v3",
   orders: "sdt_drops_orders_v1",
   categories: "sdt_drops_categories_v1",
-  offers: "sdt_drops_offers_v1",
   cart: "sdt_drops_cart_v1",
 };
 
@@ -40,7 +39,6 @@ function dispatchRefreshEvents() {
   window.dispatchEvent(new CustomEvent("sdt-products-updated"));
   window.dispatchEvent(new CustomEvent("sdt-categories-updated"));
   window.dispatchEvent(new CustomEvent("sdt-order-created"));
-  window.dispatchEvent(new CustomEvent("sdt-offers-updated"));
   window.dispatchEvent(new CustomEvent("sdt-cart-updated"));
 }
 
@@ -60,8 +58,6 @@ type DbProduct = {
 };
 
 type DbCategory = { id: string; name: string; img: string; order: number };
-type DbOffer = { id: string; title: string; description: string; badge: string; img?: string | null };
-
 async function fetchProducts() {
   const url = `${SUPABASE_URL}/rest/v1/products?select=id,name,description,cat,img,price,old,tag,stock,compatible_models,colors,tier_prices`;
   const res = await fetch(url, { headers: restHeaders() });
@@ -90,13 +86,6 @@ async function fetchCategories() {
   return (await res.json()) as DbCategory[];
 }
 
-async function fetchOffers() {
-  const url = `${SUPABASE_URL}/rest/v1/offers?select=id,title,description,badge,img`;
-  const res = await fetch(url, { headers: restHeaders() });
-  if (!res.ok) return null;
-  return (await res.json()) as DbOffer[];
-}
-
 export async function initializeCloudSync() {
   if (initialized) {
     if (syncReady) markSyncReady();
@@ -109,15 +98,13 @@ export async function initializeCloudSync() {
   }
 
   try {
-    const [products, categories, offers] = await Promise.all([fetchProducts(), fetchCategories(), fetchOffers()]);
+    const [products, categories] = await Promise.all([fetchProducts(), fetchCategories()]);
     window.localStorage.setItem(KEYS.products, JSON.stringify(products ?? []));
     window.localStorage.setItem(KEYS.categories, JSON.stringify(categories ?? []));
-    window.localStorage.setItem(KEYS.offers, JSON.stringify(offers ?? []));
     dispatchRefreshEvents();
   } catch {
     window.localStorage.setItem(KEYS.products, JSON.stringify([]));
     window.localStorage.setItem(KEYS.categories, JSON.stringify([]));
-    window.localStorage.setItem(KEYS.offers, JSON.stringify([]));
     dispatchRefreshEvents();
   }
   markSyncReady();

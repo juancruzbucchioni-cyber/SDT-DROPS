@@ -86,6 +86,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   const [selectedColor, setSelectedColor] = useState<string | undefined>(p.colors?.[0]?.color);
   const remaining = Math.max(0, getColorStock(p, selectedColor) - cartQty);
   const disabled = remaining <= 0;
+  const currentUnitPrice = getUnitPrice(p, Math.max(1, cartQty));
 
   return (
     <article className="group relative flex flex-col border border-border/80 bg-card/55 backdrop-blur-sm glow-hover">
@@ -112,7 +113,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
         <p className="text-xs text-muted-foreground">Compatibilidad: {p.compatibleModels.join(", ")}</p>
         <p className="text-xs text-muted-foreground">Stock disponible: <span className="text-neon font-bold">{remaining}</span></p>
         <div className="mt-2 flex items-baseline gap-2">
-          <span className="font-display text-xl font-bold text-neon">{formatPrice(p.price)}</span>
+          <span className="font-display text-xl font-bold text-neon">{formatPrice(currentUnitPrice)}</span>
           {p.old && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.old)}</span>}
         </div>
         {p.tierPrices?.length ? (
@@ -157,7 +158,7 @@ const sections = [
   { id: "cat-mayorista", title: "Mayorista", cats: ["Mayorista"] },
 ];
 
-export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: ProductItem) => void; cartQtyById: Record<string, number> }) {
+export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: ProductItem, color?: string) => void; cartQtyById: Record<string, number> }) {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -252,46 +253,48 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
           </div>
         </div>
 
-        <div className="mb-8 border border-border bg-card/70 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-display text-xl font-bold uppercase tracking-widest text-neon">Categorias</h3>
-            <button
-              onClick={() => setSelectedCategory("")}
-              className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-neon"
-            >
-              Reiniciar
-            </button>
-          </div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input type="radio" name="cat-filter" checked={selectedCategory === ""} onChange={() => setSelectedCategory("")} />
-              Todas las categorias
-            </label>
-            {availableCategories.map((cat) => (
-              <label key={cat} className="inline-flex items-center gap-2 text-sm">
-                <input type="radio" name="cat-filter" checked={selectedCategory === cat} onChange={() => setSelectedCategory(cat)} />
-                {cat}
-              </label>
-            ))}
-          </div>
-        </div>
-
         {selectedModel && <p className="mb-8 text-sm text-muted-foreground">Mostrando productos filtrados por <span className="font-bold text-neon">{selectedModel}</span>.</p>}
 
-        <div className="space-y-12">
-          {sections.map((section) => {
-            const list = filteredProducts.filter((p) => section.cats.includes(p.cat));
-            if (!list.length) return null;
-            return (
-              <div id={section.id} key={section.id} className="scroll-mt-28">
-                <h3 className="mb-4 font-display text-2xl font-bold uppercase tracking-widest text-neon">{section.title}</h3>
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                  {list.map((p) => <ProductCard key={p.id} p={p} cartQty={cartQtyById[p.id] ?? 0} onAddToCart={onAddToCart} />)}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[290px_minmax(0,1fr)] lg:items-start">
+          <aside className="border border-border bg-card/65 p-5 backdrop-blur-sm lg:sticky lg:top-28">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="font-display text-xl font-bold uppercase tracking-widest text-neon">Categorias</h3>
+              <button
+                onClick={() => setSelectedCategory("")}
+                className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-neon"
+              >
+                Reiniciar
+              </button>
+            </div>
+            <div className="space-y-2">
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="radio" name="cat-filter" checked={selectedCategory === ""} onChange={() => setSelectedCategory("")} />
+                Todas las categorias
+              </label>
+              {availableCategories.map((cat) => (
+                <label key={cat} className="inline-flex items-center gap-2 text-sm">
+                  <input type="radio" name="cat-filter" checked={selectedCategory === cat} onChange={() => setSelectedCategory(cat)} />
+                  {cat}
+                </label>
+              ))}
+            </div>
+          </aside>
+
+          <div className="space-y-12">
+            {sections.map((section) => {
+              const list = filteredProducts.filter((p) => section.cats.includes(p.cat));
+              if (!list.length) return null;
+              return (
+                <div id={section.id} key={section.id} className="scroll-mt-28">
+                  <h3 className="mb-4 font-display text-2xl font-bold uppercase tracking-widest text-neon">{section.title}</h3>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                    {list.map((p) => <ProductCard key={p.id} p={p} cartQty={cartQtyById[p.id] ?? 0} onAddToCart={onAddToCart} />)}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-          {filteredProducts.length === 0 && <div className="border border-border bg-card/60 p-6 text-center"><p className="font-display text-lg font-bold uppercase">No hay productos para ese filtro</p><p className="mt-2 text-sm text-muted-foreground">Carga productos en Supabase para mostrarlos aqui.</p></div>}
+              );
+            })}
+            {filteredProducts.length === 0 && <div className="border border-border bg-card/60 p-6 text-center"><p className="font-display text-lg font-bold uppercase">No hay productos para ese filtro</p><p className="mt-2 text-sm text-muted-foreground">Carga productos en Supabase para mostrarlos aqui.</p></div>}
+          </div>
         </div>
       </div>
     </section>
