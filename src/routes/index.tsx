@@ -9,7 +9,6 @@ import { Footer } from "@/components/cb/Footer";
 import { ProductLines } from "@/components/cb/ProductLines";
 import { TrendingProducts } from "@/components/cb/TrendingProducts";
 import { initializeCloudSync } from "@/lib/cloud-sync";
-import backgroundMain from "@/assets/background-main.png";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -115,7 +114,10 @@ function Index() {
     <main className="relative min-h-screen text-foreground">
       <div
         className="pointer-events-none fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${backgroundMain})` }}
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 40% 65%, #14356f 0%, #0f2f66 35%, #0b2656 65%, #081a3f 100%)",
+        }}
       />
       <div className="pointer-events-none fixed inset-0 -z-10 bg-background/72" />
       <Header
