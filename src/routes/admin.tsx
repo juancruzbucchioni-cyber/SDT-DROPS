@@ -25,7 +25,7 @@ type ProductItem = {
 
 type CategoryItem = { id: string; name: string; img: string; order: number };
 
-type TabKey = "productos" | "categorias" | "resenas";
+type TabKey = "productos" | "categorias";
 
 const STORAGE_KEY = "sdt_drops_products_v3";
 const ADMIN_SESSION_KEY = "sdt_admin_ok_v1";
@@ -314,7 +314,7 @@ function AdminPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-bold uppercase">Panel administrador</h1>
-          <p className="text-sm text-muted-foreground">Crea y edita productos, categorias y resenas conectadas a Supabase.</p>
+          <p className="text-sm text-muted-foreground">Crea y edita productos y categorias conectadas a Supabase.</p>
         </div>
         <div className="flex gap-2">
           <button className="border border-border bg-card px-3 py-2 text-xs uppercase" onClick={() => void reload()} disabled={loading}>
@@ -333,7 +333,6 @@ function AdminPage() {
       <div className="mb-6 flex gap-2">
         <TabBtn active={tab === "productos"} onClick={() => setTab("productos")}>Productos</TabBtn>
         <TabBtn active={tab === "categorias"} onClick={() => setTab("categorias")}>Categorias</TabBtn>
-        <TabBtn active={tab === "resenas"} onClick={() => setTab("resenas")}>Resenas</TabBtn>
       </div>
 
       {msg ? <p className="mb-4 text-sm text-amber-300">{msg}</p> : null}
@@ -423,28 +422,47 @@ function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((p) => (
-                    <tr key={p.id} className="border-b border-border/60">
-                      <td className="px-2 py-3">{p.name}</td>
-                      <td className="px-2 py-3">{p.cat}</td>
-                      <td className="px-2 py-3">{formatPrice(p.price)}</td>
-                      <td className="px-2 py-3">{p.stock}</td>
-                      <td className="px-2 py-3">
-                        <div className="flex gap-2">
-                          <button className="border border-border bg-card px-2 py-1 text-xs uppercase" onClick={() => startEdit(p)}>Editar</button>
-                          <button
-                            className="border border-red-500 bg-red-500/20 px-2 py-1 text-xs uppercase"
-                            onClick={() => {
-                              if (!window.confirm(`Eliminar ${p.name}?`)) return;
-                              void removeProduct(p.id).catch((e) => setMsg(String(e?.message ?? e)));
-                            }}
-                          >
-                            Borrar
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {Array.from(
+                    items.reduce<Map<string, ProductItem[]>>((acc, p) => {
+                      const key = p.cat || "Sin categoria";
+                      if (!acc.has(key)) acc.set(key, []);
+                      acc.get(key)!.push(p);
+                      return acc;
+                    }, new Map()),
+                  )
+                    .sort((a, b) => a[0].localeCompare(b[0], "es"))
+                    .flatMap(([categoryName, list]) => [
+                      <tr key={`sep-${categoryName}`} className="border-y border-primary/40 bg-primary/10">
+                        <td className="px-2 py-2 font-display text-xs font-bold uppercase tracking-widest text-neon" colSpan={5}>
+                          {categoryName}
+                        </td>
+                      </tr>,
+                      ...list
+                        .slice()
+                        .sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }))
+                        .map((p) => (
+                          <tr key={p.id} className="border-b border-border/60">
+                            <td className="px-2 py-3">{p.name}</td>
+                            <td className="px-2 py-3">{p.cat}</td>
+                            <td className="px-2 py-3">{formatPrice(p.price)}</td>
+                            <td className="px-2 py-3">{p.stock}</td>
+                            <td className="px-2 py-3">
+                              <div className="flex gap-2">
+                                <button className="border border-border bg-card px-2 py-1 text-xs uppercase" onClick={() => startEdit(p)}>Editar</button>
+                                <button
+                                  className="border border-red-500 bg-red-500/20 px-2 py-1 text-xs uppercase"
+                                  onClick={() => {
+                                    if (!window.confirm(`Eliminar ${p.name}?`)) return;
+                                    void removeProduct(p.id).catch((e) => setMsg(String(e?.message ?? e)));
+                                  }}
+                                >
+                                  Borrar
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )),
+                    ])}
                 </tbody>
               </table>
             </div>
@@ -453,14 +471,41 @@ function AdminPage() {
       ) : null}
 
       {tab === "categorias" ? (
-        <section className="border border-border bg-card/65 p-4 text-sm text-muted-foreground">
-          Edicion de categorias en siguiente paso. Ya quedan visibles: {categories.map((c) => c.name).join(", ")}.
-        </section>
-      ) : null}
-
-      {tab === "resenas" ? (
-        <section className="border border-border bg-card/65 p-4 text-sm text-muted-foreground">
-          Edicion de resenas en siguiente paso.
+        <section className="border border-border bg-card/65 p-4">
+          <div className="overflow-auto">
+            <table className="w-full min-w-[680px] text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-neon">
+                  <th className="px-2 py-2">ID</th>
+                  <th className="px-2 py-2">Nombre</th>
+                  <th className="px-2 py-2">Imagen URL</th>
+                  <th className="px-2 py-2">Orden</th>
+                  <th className="px-2 py-2">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((c) => (
+                  <CategoryRow
+                    key={c.id}
+                    item={c}
+                    onSave={async (next) => {
+                      const res = await fetch(`${SUPABASE_URL}/rest/v1/categories?id=eq.${encodeURIComponent(c.id)}`, {
+                        method: "PATCH",
+                        headers: { ...headers(), Prefer: "return=representation" },
+                        body: JSON.stringify(next),
+                      });
+                      if (!res.ok) {
+                        const t = await res.text();
+                        throw new Error(`No se pudo guardar categoria: ${t}`);
+                      }
+                      await reload();
+                      setMsg(`Categoria guardada: ${next.name}`);
+                    }}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       ) : null}
     </main>
@@ -484,5 +529,51 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
     >
       {children}
     </button>
+  );
+}
+
+function CategoryRow({
+  item,
+  onSave,
+}: {
+  item: CategoryItem;
+  onSave: (next: CategoryItem) => Promise<void>;
+}) {
+  const [draft, setDraft] = useState<CategoryItem>(item);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setDraft(item);
+  }, [item]);
+
+  return (
+    <tr className="border-b border-border/60">
+      <td className="px-2 py-2">{draft.id}</td>
+      <td className="px-2 py-2">
+        <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="w-full border border-border bg-background px-2 py-1" />
+      </td>
+      <td className="px-2 py-2">
+        <input value={draft.img} onChange={(e) => setDraft({ ...draft, img: e.target.value })} className="w-full border border-border bg-background px-2 py-1" />
+      </td>
+      <td className="px-2 py-2">
+        <input type="number" value={draft.order} onChange={(e) => setDraft({ ...draft, order: Number(e.target.value) || 0 })} className="w-24 border border-border bg-background px-2 py-1" />
+      </td>
+      <td className="px-2 py-2">
+        <button
+          disabled={busy}
+          className="border border-primary bg-primary px-2 py-1 text-xs uppercase"
+          onClick={async () => {
+            setBusy(true);
+            try {
+              await onSave(draft);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          Guardar
+        </button>
+      </td>
+    </tr>
   );
 }
