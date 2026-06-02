@@ -89,8 +89,8 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   const currentUnitPrice = getUnitPrice(p, Math.max(1, cartQty));
 
   return (
-    <article className="group relative flex flex-col border border-border/80 bg-card/55 backdrop-blur-sm glow-hover">
-      <div className="relative aspect-square overflow-hidden">
+    <article className="group relative flex flex-col rounded-2xl border border-border/80 bg-card/55 backdrop-blur-sm glow-hover overflow-hidden">
+      <div className="relative aspect-square overflow-hidden rounded-t-2xl">
         <img
           src={resolveImageSrc(p.img)}
           alt={p.name}
@@ -110,7 +110,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
           <Plus className="h-4 w-4" /> {disabled ? "Sin stock" : "Anadir al carrito"}
         </button>
       </div>
-      <div className="flex flex-col gap-1 p-5">
+      <div className="flex flex-col gap-1 rounded-b-2xl p-5">
         <span className="font-display text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{p.cat}</span>
         <h3 className="font-display text-base font-bold leading-tight text-foreground">{p.name}</h3>
         {p.description ? <p className="text-xs text-muted-foreground">{p.description}</p> : null}
