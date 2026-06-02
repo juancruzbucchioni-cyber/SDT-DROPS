@@ -181,6 +181,24 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
         </div>
       )}
 
+      {!compact && (
+        <div className="border-t border-border/60 lg:hidden">
+          <div className="mx-auto flex max-w-7xl items-center gap-4 overflow-x-auto px-4 py-2 md:px-8">
+            {nav.map((n) => (
+              <a
+                key={`m-${n}`}
+                href={n === "Catalogo" ? "#productos" : n === "Comunidad Emprendedora" ? "https://chat.whatsapp.com/HayGktRhVcvGnIPqLQxuWt" : n === "Contacto" ? "#contacto" : "https://instagram.com/santi.villalbaa_"}
+                className={`shrink-0 font-display text-[11px] font-semibold uppercase tracking-widest transition-colors hover:text-neon ${n === "Comunidad Emprendedora" ? "text-neon" : "text-muted-foreground"}`}
+                target={n === "Instagram" || n === "Comunidad Emprendedora" ? "_blank" : undefined}
+                rel={n === "Instagram" || n === "Comunidad Emprendedora" ? "noreferrer" : undefined}
+              >
+                {n}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="border-t border-border/60">
         <div className={`mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 md:px-8 ${compact ? "py-1.5" : "py-2"}`}>
           {compact && (
