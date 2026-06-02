@@ -101,11 +101,11 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-        {p.tag && <span className="absolute left-3 top-3 border border-primary bg-background/80 px-2 py-1 font-display text-[10px] font-bold tracking-widest text-neon backdrop-blur">{p.tag}</span>}
+        {p.tag && <span className="absolute left-3 top-3 rounded-lg border border-primary bg-background/80 px-2 py-1 font-display text-[10px] font-bold tracking-widest text-neon backdrop-blur">{p.tag}</span>}
         <button
           disabled={disabled}
           onClick={() => onAddToCart(p, selectedColor)}
-          className="absolute inset-x-3 bottom-3 inline-flex translate-y-0 items-center justify-center gap-2 border border-primary bg-primary/95 px-4 py-3 font-display text-xs font-bold uppercase tracking-widest text-primary-foreground opacity-100 transition-all lg:translate-y-3 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="absolute inset-x-3 bottom-3 inline-flex rounded-xl translate-y-0 items-center justify-center gap-2 border border-primary bg-primary/95 px-4 py-3 font-display text-xs font-bold uppercase tracking-widest text-primary-foreground opacity-100 transition-all lg:translate-y-3 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Plus className="h-4 w-4" /> {disabled ? "Sin stock" : "Anadir al carrito"}
         </button>
@@ -121,7 +121,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
           {p.old && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.old)}</span>}
         </div>
         {p.tierPrices?.length ? (
-          <div className="mt-2 rounded border border-border/70 bg-background/35 p-2 text-[10px] uppercase tracking-wide text-muted-foreground">
+          <div className="mt-2 rounded-xl border border-border/70 bg-background/35 p-2 text-[10px] uppercase tracking-wide text-muted-foreground">
             {p.tierPrices.map((t, idx) => (
               <div key={`${p.id}-tier-${idx}`}>
                 {t.maxQty ? `${t.minQty}-${t.maxQty}` : `${t.minQty}+`} unid: <span className="font-bold text-neon">{formatPrice(t.unitPrice)}</span>
@@ -138,9 +138,9 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
                   type="button"
                   key={`${p.id}-color-${idx}`}
                   onClick={() => setSelectedColor(c.color)}
-                  className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${selectedColor === c.color ? "border-primary bg-primary/10" : "border-border"}`}
+                  className={`inline-flex items-center gap-1 rounded-xl border px-1.5 py-0.5 text-[10px] ${selectedColor === c.color ? "border-primary bg-primary/10" : "border-border"}`}
                 >
-                  <span title={c.color} className="h-3.5 w-3.5 rounded border border-border" style={{ backgroundColor: resolveColorCss(c.color) }} />
+                  <span title={c.color} className="h-3.5 w-3.5 rounded-full border border-border" style={{ backgroundColor: resolveColorCss(c.color) }} />
                   <span className="font-bold text-neon">{c.stock}</span>
                 </button>
               ))}
