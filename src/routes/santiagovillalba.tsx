@@ -319,8 +319,8 @@ function AdminPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 text-foreground">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <main className="mx-auto max-w-7xl px-4 py-6 text-foreground">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-bold uppercase">Panel administrador</h1>
           <p className="text-sm text-muted-foreground">Crea y edita productos y categorias conectadas a Supabase.</p>
@@ -332,14 +332,14 @@ function AdminPage() {
         </div>
       </div>
 
-      <div className="mb-6 grid gap-3 md:grid-cols-4">
+      <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
         <StatCard title="Productos" value={items.length} />
         <StatCard title="Categorias" value={categories.length} />
         <StatCard title="Stock total" value={totalStock} />
         <StatCard title="Stock bajo" value={lowStock} />
       </div>
 
-      <div className="mb-6 flex gap-2">
+      <div className="mb-4 flex gap-2">
         <TabBtn active={tab === "productos"} onClick={() => setTab("productos")}>Productos</TabBtn>
         <TabBtn active={tab === "categorias"} onClick={() => setTab("categorias")}>Categorias</TabBtn>
       </div>
@@ -524,20 +524,10 @@ function AdminPage() {
       ) : null}
 
       {tab === "categorias" ? (
-        <section className="border border-border bg-card/65 p-4">
-          <div className="overflow-auto">
-            <table className="w-full min-w-[680px] text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-neon">
-                  <th className="px-2 py-2">ID</th>
-                  <th className="px-2 py-2">Nombre</th>
-                  <th className="px-2 py-2">Imagen URL</th>
-                  <th className="px-2 py-2">Orden</th>
-                  <th className="px-2 py-2">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((c) => (
+        <section className="rounded-xl border border-border bg-card/65 p-4">
+          <div className="mb-4"><h2 className="text-lg font-semibold">Categorías</h2><p className="text-xs text-muted-foreground">Editá el nombre, la imagen y el orden de aparición.</p></div>
+          <div className="grid gap-3 lg:grid-cols-2">
+                {categories.slice().sort((a, b) => a.order - b.order).map((c) => (
                   <CategoryRow
                     key={c.id}
                     item={c}
@@ -556,8 +546,6 @@ function AdminPage() {
                     }}
                   />
                 ))}
-              </tbody>
-            </table>
           </div>
         </section>
       ) : null}
@@ -567,9 +555,9 @@ function AdminPage() {
 
 function StatCard({ title, value }: { title: string; value: number }) {
   return (
-    <div className="border border-border bg-card/65 p-3">
+    <div className="rounded-lg border border-border bg-card/65 px-3 py-2">
       <div className="text-xs uppercase text-muted-foreground">{title}</div>
-      <div className="mt-1 font-display text-2xl font-bold text-neon">{value}</div>
+      <div className="font-display text-xl font-bold text-neon">{value}</div>
     </div>
   );
 }
@@ -600,17 +588,18 @@ function CategoryRow({
   }, [item]);
 
   return (
-    <tr className="border-b border-border/60">
-      <td className="px-2 py-2">{draft.id}</td>
-      <td className="px-2 py-2">
-        <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="w-full border border-border bg-background px-2 py-1" />
-      </td>
-      <td className="px-2 py-2">
-        <div className="min-w-[260px] space-y-2">
-          {draft.img ? <img src={draft.img} alt={`Imagen de ${draft.name}`} className="h-16 w-24 rounded-md border border-border object-cover" /> : null}
-          <input value={draft.img} onChange={(e) => setDraft({ ...draft, img: e.target.value })} placeholder="URL de la imagen" className="w-full border border-border bg-background px-2 py-1" />
-          <label className="inline-flex cursor-pointer items-center rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:border-primary">
-            {busy ? "Subiendo…" : "Elegir de galería"}
+    <article className="rounded-lg border border-border bg-background/55 p-3">
+      <div className="flex gap-3">
+        {draft.img ? <img src={draft.img} alt={`Imagen de ${draft.name}`} className="h-20 w-24 shrink-0 rounded-md border border-border object-cover" /> : <div className="h-20 w-24 shrink-0 rounded-md border border-dashed border-border" />}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} aria-label="Nombre" className="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-2 text-sm font-semibold" />
+            <label className="shrink-0 text-xs text-muted-foreground">Orden<input type="number" value={draft.order} onChange={(e) => setDraft({ ...draft, order: Number(e.target.value) || 0 })} className="ml-1 w-14 rounded-md border border-border bg-background px-2 py-2 text-center text-sm text-foreground" /></label>
+          </div>
+          <p className="mt-1 truncate text-[11px] text-muted-foreground">ID: {draft.id}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+          <label className="inline-flex cursor-pointer items-center rounded-md border border-border bg-card px-3 py-1.5 text-xs font-semibold transition-colors hover:border-primary">
+            {busy ? "Subiendo…" : "Cambiar imagen"}
             <input
               type="file"
               accept="image/*"
@@ -632,28 +621,12 @@ function CategoryRow({
               }}
             />
           </label>
+          <button disabled={busy} className="rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-white" onClick={async () => { setBusy(true); try { await onSave(draft); } finally { setBusy(false); } }}>Guardar cambios</button>
+          </div>
         </div>
-      </td>
-      <td className="px-2 py-2">
-        <input type="number" value={draft.order} onChange={(e) => setDraft({ ...draft, order: Number(e.target.value) || 0 })} className="w-24 border border-border bg-background px-2 py-1" />
-      </td>
-      <td className="px-2 py-2">
-        <button
-          disabled={busy}
-          className="border border-primary bg-primary px-2 py-1 text-xs uppercase"
-          onClick={async () => {
-            setBusy(true);
-            try {
-              await onSave(draft);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          Guardar
-        </button>
-      </td>
-    </tr>
+      </div>
+      <details className="mt-2"><summary className="cursor-pointer text-xs text-muted-foreground">Editar URL manualmente</summary><input value={draft.img} onChange={(e) => setDraft({ ...draft, img: e.target.value })} placeholder="URL de la imagen" className="mt-2 w-full rounded-md border border-border bg-background px-2.5 py-2 text-xs" /></details>
+    </article>
   );
 }
 
