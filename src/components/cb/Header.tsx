@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, ShoppingBag, Plus, Minus, Trash2 } from "lucide-react";
+import { Menu, ShoppingBag, Plus, Minus, Trash2, Search } from "lucide-react";
 import logo from "@/assets/logo.png";
 import type { CartItem } from "@/routes/index";
 import type { ProductItem } from "@/components/cb/Products";
@@ -40,6 +40,7 @@ type OrderRecord = {
 export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, onUpdateColor, onRemove, onClear }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const onKeyDown = (ev: KeyboardEvent) => {
@@ -48,6 +49,10 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("sdt-product-search", { detail: { term: searchTerm } }));
+  }, [searchTerm]);
 
   const handleCheckout = () => {
     if (!cart.length) return;
@@ -119,8 +124,8 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl">
 
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
-          <Link to="/" className="flex items-center gap-3">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-8">
+          <Link to="/" className="flex shrink-0 items-center gap-2.5">
             <img src={logo} alt="SDT DROPS" width={40} height={40} className="h-10 w-10 object-contain drop-shadow-[0_0_12px_color-mix(in_oklab,var(--neon)_60%,transparent)]" />
             <div className="hidden leading-none sm:block">
               <div className="font-display text-lg font-bold tracking-widest text-foreground">
@@ -130,12 +135,12 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-8 lg:flex">
+          <nav className="ml-auto hidden items-center gap-5 xl:gap-7 lg:flex">
             {nav.map((n) => (
               <a
                 key={n}
                 href={n === "Catalogo" ? "#productos" : n === "Comunidad Emprendedora" ? "https://chat.whatsapp.com/HayGktRhVcvGnIPqLQxuWt" : n === "Contacto" ? "#contacto" : "https://instagram.com/santi.villalbaa_"}
-                className={`font-display text-sm font-semibold uppercase tracking-widest transition-colors hover:text-neon ${n === "Comunidad Emprendedora" ? "text-neon" : "text-muted-foreground"}`}
+                className={`whitespace-nowrap font-display text-xs font-semibold uppercase tracking-[0.14em] transition-colors hover:text-neon xl:text-sm ${n === "Comunidad Emprendedora" ? "text-neon" : "text-muted-foreground"}`}
                 target={n === "Instagram" || n === "Comunidad Emprendedora" ? "_blank" : undefined}
                 rel={n === "Instagram" || n === "Comunidad Emprendedora" ? "noreferrer" : undefined}
               >
@@ -144,7 +149,19 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
             ))}
           </nav>
 
-          <div className="relative flex items-center gap-1">
+          <label className="relative ml-auto hidden w-44 shrink-0 xl:block">
+            <span className="sr-only">Buscar producto</span>
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Buscar producto"
+              className="h-10 w-full rounded-xl border border-border bg-card/70 pl-9 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
+            />
+          </label>
+
+          <div className="relative flex shrink-0 items-center gap-1">
             <button onClick={() => setOpen((v) => !v)} aria-label="Carrito" className="relative grid h-10 w-10 place-items-center text-muted-foreground hover:text-neon glow-hover">
               <ShoppingBag className="h-5 w-5" />
               <span className="absolute -right-0 -top-0 grid h-4 w-4 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{cartCount}</span>
@@ -159,6 +176,17 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
       {mobileOpen && (
         <div className="border-t border-border/60 bg-background/95 lg:hidden">
           <nav className="mx-auto grid max-w-7xl gap-1 px-4 py-3 md:px-8">
+            <label className="relative mb-2 block">
+              <span className="sr-only">Buscar producto</span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Buscar producto"
+                className="h-11 w-full rounded-xl border border-border bg-card/70 pl-9 pr-3 text-foreground outline-none focus:border-primary"
+              />
+            </label>
             {nav.map((n) => (
               <a
                 key={`m-${n}`}
