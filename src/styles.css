@@ -29,8 +29,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-neon: var(--neon);
-  --font-display: "Nexa Heavy", "Nexa", "Impact", system-ui, sans-serif;
-  --font-sans: "Rajdhani", "Inter", system-ui, sans-serif;
+  --font-display: "Inter", "Manrope", system-ui, sans-serif;
+  --font-sans: "Inter", "Manrope", system-ui, sans-serif;
 }
 
 :root {
