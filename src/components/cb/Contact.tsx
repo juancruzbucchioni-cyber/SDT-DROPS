@@ -1,4 +1,4 @@
-import { Instagram, MapPin, MessageCircle, Phone, type LucideIcon } from "lucide-react";
+import { Instagram, MapPin, Phone, type LucideIcon } from "lucide-react";
 
 type ContactItem = {
   Icon: LucideIcon;
@@ -29,22 +29,12 @@ function ContactCard({ item }: { item: ContactItem }) {
 export function Contact() {
   return (
     <section id="contacto" className="relative overflow-hidden border-b border-border py-16 sm:py-24">
-      <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 md:px-8 lg:grid-cols-2">
-        <div>
+      <div className="relative mx-auto max-w-7xl px-4 md:px-8">
+        <div className="max-w-4xl">
           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Contacto</div>
           <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Hablá con <span className="text-primary">SDT DROPS</span></h2>
           <p className="mt-4 max-w-md text-muted-foreground">Atención rápida y personalizada. Te ayudamos a elegir el producto ideal para vos o para tu negocio.</p>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">{contactItems.map((item) => <ContactCard key={item.label} item={item} />)}</div>
-        </div>
-        <div className="rounded-2xl border border-border bg-card/60 p-5 sm:p-8">
-          <h3 className="text-2xl font-semibold text-foreground">Enviá un mensaje</h3>
-          <p className="mt-2 text-sm text-muted-foreground">Contanos qué producto buscás y te respondemos por WhatsApp.</p>
-          <div className="mt-6 grid grid-cols-1 gap-4">
-            <input placeholder="Nombre" aria-label="Nombre" className="border border-border bg-background px-4 py-3 text-foreground outline-none focus:border-primary" />
-            <input placeholder="Producto o categoría de interés" aria-label="Producto o categoría de interés" className="border border-border bg-background px-4 py-3 text-foreground outline-none focus:border-primary" />
-            <textarea rows={5} placeholder="Mensaje" aria-label="Mensaje" className="border border-border bg-background px-4 py-3 text-foreground outline-none focus:border-primary" />
-          </div>
-          <a href="https://wa.me/5493534814420" target="_blank" rel="noreferrer" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-sm font-semibold text-white transition-colors hover:bg-blue-600"><MessageCircle className="h-4 w-4" /> Continuar por WhatsApp</a>
         </div>
       </div>
     </section>
