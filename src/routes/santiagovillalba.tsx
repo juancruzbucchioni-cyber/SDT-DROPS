@@ -390,8 +390,8 @@ function AdminPage() {
       <div className="mb-4 flex flex-wrap gap-2">
         <TabBtn active={tab === "productos"} onClick={() => setTab("productos")}>Productos</TabBtn>
         <TabBtn active={tab === "categorias"} onClick={() => setTab("categorias")}>Categorias</TabBtn>
-        <TabBtn active={tab === "estadisticas"} onClick={() => setTab("estadisticas")}>Estadísticas</TabBtn>
         <TabBtn active={tab === "ganancias"} onClick={() => setTab("ganancias")}>Ganancias</TabBtn>
+        <TabBtn active={tab === "estadisticas"} onClick={() => setTab("estadisticas")}>Estadísticas</TabBtn>
       </div>
 
       {msg ? <p className="mb-4 text-sm text-amber-300">{msg}</p> : null}
