@@ -8,8 +8,8 @@ type ContactItem = {
 };
 
 const contactItems: ContactItem[] = [
-  { Icon: MapPin, label: "Córdoba Capital", detail: "Punto de atención, retiro y coordinación de entregas" },
-  { Icon: MapPin, label: "Villa María, Córdoba", detail: "Punto de atención, retiro y coordinación de entregas" },
+  { Icon: MapPin, label: "Córdoba Capital", detail: "Punto de retiro y coordinación de entregas" },
+  { Icon: MapPin, label: "Villa María, Córdoba", detail: "Punto de retiro y coordinación de entregas" },
   { Icon: Phone, label: "353 481-4420", detail: "WhatsApp · Lunes a sábado, de 9 a 19 h", href: "https://wa.me/5493534814420" },
   { Icon: Instagram, label: "@santi.villalbaa_", detail: "Novedades, ingresos y consultas", href: "https://instagram.com/santi.villalbaa_" },
 ];
