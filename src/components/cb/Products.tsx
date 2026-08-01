@@ -89,8 +89,8 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   const currentUnitPrice = getUnitPrice(p, Math.max(1, cartQty));
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-[0_12px_30px_rgba(17,24,39,.08)]">
-      <div className="relative aspect-square overflow-hidden bg-[#F8F9FA]">
+    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-[#C5D5ED] bg-[#DCE8FA] transition-shadow hover:shadow-[0_12px_30px_rgba(17,24,39,.08)]">
+      <div className="relative aspect-square overflow-hidden bg-[#EAF1FC]">
         <img
           src={resolveImageSrc(p.img)}
           alt={p.name}
@@ -100,7 +100,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
           }}
           className="absolute inset-0 h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.02]"
         />
-        {p.tag && <span className="absolute left-3 top-3 rounded-md border border-border bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">{p.tag}</span>}
+        {p.tag && <span className="absolute left-3 top-3 rounded-md border border-[#C5D5ED] bg-[#EAF1FC] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">{p.tag}</span>}
         <button
           disabled={disabled}
           onClick={() => onAddToCart(p, selectedColor)}
@@ -223,7 +223,7 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Catálogo</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Productos seleccionados</h2></div>
-          <select aria-label="Filtrar por categoría" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none focus:border-primary sm:w-56"><option value="">Todas las categorías</option>{availableCategories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select>
+          <select aria-label="Filtrar por categoría" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-11 w-full rounded-lg border border-[#C5D5ED] bg-[#DCE8FA] px-3 text-sm text-foreground outline-none focus:border-primary sm:w-56"><option value="">Todas las categorías</option>{availableCategories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select>
         </div>
           <div className="space-y-12">
             {sections.map((section) => {
@@ -238,7 +238,7 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
                 </div>
               );
             })}
-            {filteredProducts.length === 0 && <div className="rounded-xl border border-border bg-white p-8 text-center"><p className="text-base font-semibold">No hay productos para ese filtro</p><p className="mt-2 text-sm text-muted-foreground">Probá con otra categoría o búsqueda.</p></div>}
+            {filteredProducts.length === 0 && <div className="rounded-xl border border-[#C5D5ED] bg-[#DCE8FA] p-8 text-center"><p className="text-base font-semibold">No hay productos para ese filtro</p><p className="mt-2 text-sm text-muted-foreground">Probá con otra categoría o búsqueda.</p></div>}
           </div>
       </div>
     </section>
