@@ -12,7 +12,7 @@ const categories = [
 
 export function Categories() {
   return (
-    <section id="categorias" className="bg-white py-16 sm:py-20">
+    <section id="categorias" className="bg-[#F3F6FC] py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="mb-8 flex items-end justify-between gap-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Categorías</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Explorá nuestra selección</h2></div>

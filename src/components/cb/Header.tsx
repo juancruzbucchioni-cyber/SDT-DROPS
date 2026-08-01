@@ -127,16 +127,16 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-white/95 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#071632]/95 text-white shadow-sm backdrop-blur-xl">
 
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-8">
           <a href="/" aria-label="Recargar SDT DROPS y volver al inicio" className="flex shrink-0 items-center gap-2.5">
             <img src={logo} alt="SDT DROPS" width={40} height={40} className="h-10 w-10 object-contain drop-shadow-[0_0_12px_color-mix(in_oklab,var(--neon)_60%,transparent)]" />
             <div className="hidden leading-none sm:block">
-              <div className="font-display text-lg font-bold tracking-widest text-foreground">
+              <div className="font-display text-lg font-bold tracking-widest text-white">
                 SDT <span className="text-neon">DROPS</span>
               </div>
-              <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-muted-foreground">mayorista / importador</div>
+              <div className="font-sans text-[10px] uppercase tracking-[0.3em] text-blue-200/70">mayorista / importador</div>
             </div>
           </a>
 
@@ -145,7 +145,7 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
               <a
                 key={item.label}
                 href={item.href}
-                className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                className="whitespace-nowrap text-sm font-medium text-blue-100/75 transition-colors hover:text-white"
               >
                 {item.label}
               </a>
@@ -154,23 +154,23 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
 
           <label className="relative ml-auto hidden w-44 shrink-0 xl:block">
             <span className="sr-only">Buscar producto</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-200/60" />
             <input
               type="search"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Buscar producto"
-              className="h-10 w-full rounded-xl border border-border bg-card/70 pl-9 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
+              className="h-10 w-full rounded-xl border border-white/15 bg-white/10 pl-9 pr-3 text-sm text-white outline-none transition-colors placeholder:text-blue-200/60 focus:border-blue-400"
             />
           </label>
 
           <div className="relative flex shrink-0 items-center gap-1">
-            <button onClick={() => setOpen((v) => !v)} aria-label="Carrito" className="relative grid h-10 w-10 place-items-center text-muted-foreground hover:text-neon glow-hover">
+            <button onClick={() => setOpen((v) => !v)} aria-label="Carrito" className="relative grid h-10 w-10 place-items-center text-blue-100/80 hover:text-white">
               <ShoppingBag className="h-5 w-5" />
               <span className="absolute -right-0 -top-0 grid h-4 w-4 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{cartCount}</span>
             </button>
-            <a href="/santiagovillalba" aria-label="Cuenta" className="hidden h-10 w-10 place-items-center text-muted-foreground transition-colors hover:text-primary sm:grid"><UserRound className="h-5 w-5" /></a>
-            <button onClick={() => setMobileOpen((value) => !value)} aria-label="Abrir menú" aria-expanded={mobileOpen} className="grid h-10 w-10 place-items-center text-foreground lg:hidden">
+            <a href="/santiagovillalba" aria-label="Cuenta" className="hidden h-10 w-10 place-items-center text-blue-100/80 transition-colors hover:text-white sm:grid"><UserRound className="h-5 w-5" /></a>
+            <button onClick={() => setMobileOpen((value) => !value)} aria-label="Abrir menú" aria-expanded={mobileOpen} className="grid h-10 w-10 place-items-center text-white lg:hidden">
               <Menu className="h-5 w-5" />
             </button>
             {open && <CartPanel cart={cart} cartTotal={cartTotal} onIncrement={onIncrement} onDecrement={onDecrement} onUpdateColor={onUpdateColor} onRemove={onRemove} onClear={onClear} onCheckout={handleCheckout} />}
@@ -178,7 +178,7 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
         </div>
 
       {mobileOpen && (
-        <div className="border-t border-border/60 bg-background/95 lg:hidden">
+        <div className="border-t border-white/10 bg-[#071632] lg:hidden">
           <nav className="mx-auto grid max-w-7xl gap-1 px-4 py-3 md:px-8">
             <label className="relative mb-2 block">
               <span className="sr-only">Buscar producto</span>
@@ -188,7 +188,7 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Buscar producto"
-                className="h-11 w-full rounded-xl border border-border bg-card/70 pl-9 pr-3 text-foreground outline-none focus:border-primary"
+                className="h-11 w-full rounded-xl border border-white/15 bg-white/10 pl-9 pr-3 text-white outline-none placeholder:text-blue-200/60 focus:border-blue-400"
               />
             </label>
             {nav.map((item) => (
@@ -196,7 +196,7 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
                 key={`m-${item.label}`}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+                className="rounded-lg px-3 py-3 text-sm font-medium text-blue-100/80 transition-colors hover:bg-white/10 hover:text-white"
               >
                 {item.label}
               </a>
