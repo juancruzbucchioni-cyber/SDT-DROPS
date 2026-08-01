@@ -14,8 +14,8 @@ export function Hero() {
             <a href="#nosotros" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#D7DCE3] bg-[#F3F5F7] px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary">Conocé SDT DROPS</a>
           </div>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-[#D7DCE3] bg-[#F3F5F7] shadow-[0_16px_45px_rgba(17,24,39,.08)]">
-          <img src={todos} alt="Selección de productos importados SDT DROPS" className="aspect-[16/8] h-full w-full object-cover object-center" />
+        <div className="flex aspect-[16/8] items-center overflow-hidden rounded-2xl border border-[#162B52] bg-[#010713] shadow-[0_16px_45px_rgba(17,24,39,.12)]">
+          <img src={todos} alt="Selección de productos importados SDT DROPS" className="h-auto w-full object-contain" />
         </div>
       </div>
     </section>
