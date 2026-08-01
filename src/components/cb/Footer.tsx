@@ -8,7 +8,7 @@ export function Footer() {
           <img src={logo} alt="SDT DROPS" width={64} height={64} className="h-14 w-auto object-contain drop-shadow-[0_0_18px_color-mix(in_oklab,var(--neon)_55%,transparent)]" />
           <p className="mt-4 max-w-sm text-sm text-muted-foreground">
             Tienda mayorista e importadora.
-            Tecnologia, perfumes, Stanley, accesorios, camisetas y mas.
+            Tecnología, perfumes, Stanley, accesorios, camisetas y más.
           </p>
         </div>
         <div>
@@ -26,7 +26,7 @@ export function Footer() {
         <div>
           <h4 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">Soporte</h4>
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-            {["Cambios", "Envios", "Garantia", "Preguntas frecuentes", "Contacto"].map((x) => (
+            {["Cambios", "Envíos", "Garantía", "Preguntas frecuentes", "Contacto"].map((x) => (
               <li key={x}>
                 <a href="#contacto" className="hover:text-neon">
                   {x}
@@ -38,8 +38,8 @@ export function Footer() {
       </div>
       <div className="border-t border-border py-6">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 md:flex-row md:px-8">
-          <p className="font-display text-xs uppercase tracking-widest text-muted-foreground">(c) 2026 SDT DROPS - Todos los derechos reservados</p>
-          <p className="font-display text-xs uppercase tracking-widest text-muted-foreground">Cordoba Capital y Villa Maria, Cordoba</p>
+          <p className="font-display text-xs uppercase tracking-widest text-muted-foreground">© 2026 SDT DROPS · Todos los derechos reservados</p>
+          <p className="font-display text-xs uppercase tracking-widest text-muted-foreground">Córdoba Capital · Villa María, Córdoba</p>
         </div>
       </div>
     </footer>

@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import favicon from "../assets/logo.png?url";
 
 function NotFoundComponent() {
   return (
@@ -82,6 +83,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@juan.bucchioni" },
     ],
     links: [
+      { rel: "icon", type: "image/png", href: favicon },
+      { rel: "shortcut icon", type: "image/png", href: favicon },
+      { rel: "apple-touch-icon", href: favicon },
       {
         rel: "stylesheet",
         href: appCss,
