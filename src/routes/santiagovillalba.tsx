@@ -166,6 +166,7 @@ function AdminPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<number>(0);
+  const [usdPrice, setUsdPrice] = useState<number | "">("");
   const [stock, setStock] = useState<number>(1);
   const [cat, setCat] = useState("Mayorista");
   const [imgUrl, setImgUrl] = useState("");
@@ -234,6 +235,7 @@ function AdminPage() {
     setName("");
     setDescription("");
     setPrice(0);
+    setUsdPrice("");
     setStock(1);
     setCat(categories[0]?.name ?? "Mayorista");
     setImgUrl("");
@@ -259,7 +261,7 @@ function AdminPage() {
       old: null,
       tag: "",
       stock: Number(stock) || 0,
-      compatible_models: ["Universal"],
+      compatible_models: ["Universal", ...(Number(usdPrice) > 0 ? [`USD:${Number(usdPrice)}`] : [])],
       colors: parseColorsSimple(colorsInput),
       tier_prices: parseTierPrices(tierInput),
     };
@@ -303,6 +305,8 @@ function AdminPage() {
     setName(p.name);
     setDescription(p.description ?? "");
     setPrice(p.price ?? 0);
+    const savedUsdPrice = (p.compatibleModels ?? []).find((value) => value.startsWith("USD:"));
+    setUsdPrice(savedUsdPrice ? Number(savedUsdPrice.replace("USD:", "")) || "" : "");
     setStock(p.stock ?? 0);
     setCat(p.cat ?? "Mayorista");
     const productImages = String(p.img ?? "").split(/\r?\n/).map((url) => url.trim()).filter(Boolean);
@@ -466,6 +470,9 @@ function AdminPage() {
                 <option value="empty">Sin stock</option>
               </select>
             </div>
+
+            <label className="mt-3 block text-sm font-semibold text-emerald-700">💵 Precio USD <span className="font-normal text-muted-foreground">(opcional)</span></label>
+            <input type="number" min="0" step="0.01" value={usdPrice} onChange={(e) => setUsdPrice(e.target.value === "" ? "" : Number(e.target.value))} placeholder="Ej: 120" className="mt-1 w-full border border-emerald-400 bg-emerald-50 px-3 py-2 text-emerald-800 outline-none focus:border-emerald-600" />
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
               <span>{filteredAdminItems.length} {filteredAdminItems.length === 1 ? "producto" : "productos"}</span>
               <div className="flex gap-2">

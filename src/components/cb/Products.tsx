@@ -80,6 +80,12 @@ function formatPrice(value: number) {
   }).format(value);
 }
 
+function getUsdPrice(product: ProductItem) {
+  const marker = (product.compatibleModels ?? []).find((value) => value.startsWith("USD:"));
+  const value = marker ? Number(marker.replace("USD:", "")) : 0;
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
 function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: number; onAddToCart: (product: ProductItem, color?: string) => void }) {
   const productImages = resolveImageSources(p.img);
   const [activeImage, setActiveImage] = useState(productImages[0]);
@@ -87,6 +93,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   const remaining = Math.max(0, getColorStock(p, selectedColor) - cartQty);
   const disabled = remaining <= 0;
   const currentUnitPrice = getUnitPrice(p, Math.max(1, cartQty));
+  const usdPrice = getUsdPrice(p);
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-xl border border-[#D7DCE3] bg-[#F3F5F7] transition-shadow hover:shadow-[0_12px_30px_rgba(17,24,39,.08)]">
@@ -226,6 +233,7 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Catálogo</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Productos seleccionados</h2></div>
           <select aria-label="Filtrar por categoría" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-11 w-full rounded-lg border border-[#C5D5ED] bg-[#DCE8FA] px-3 text-sm text-foreground outline-none focus:border-primary sm:w-56"><option value="">Todas las categorías</option>{availableCategories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select>
         </div>
+        {usdPrice ? <p className="mt-1 text-sm font-semibold text-emerald-700">💵 USD {new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(usdPrice)}</p> : null}
           <div className="space-y-12">
             {sections.map((section) => {
               const list = filteredProducts.filter((p) => section.cats.includes(p.cat));
