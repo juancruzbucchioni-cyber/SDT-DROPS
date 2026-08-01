@@ -1,6 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ChevronDown, ChevronRight, Plus, Search, Trash2 } from "lucide-react";
+import { defaultCategories } from "@/components/cb/catalog-config";
 
 export const Route = createFileRoute("/santiagovillalba")({
   component: AdminPage,
@@ -654,7 +655,7 @@ function CategoryRow({
   return (
     <article className="rounded-lg border border-border bg-background/55 p-3">
       <div className="flex gap-3">
-        {draft.img ? <img src={draft.img} alt={`Imagen de ${draft.name}`} className="h-20 w-24 shrink-0 rounded-md border border-border object-cover" /> : <div className="h-20 w-24 shrink-0 rounded-md border border-dashed border-border" />}
+        <img src={draft.img || getCategoryFallback(draft.name)} alt={`Imagen de ${draft.name}`} onError={(event) => { event.currentTarget.src = getCategoryFallback(draft.name); }} className="h-20 w-24 shrink-0 rounded-md border border-border object-cover" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} aria-label="Nombre" className="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-2 text-sm font-semibold" />
@@ -698,5 +699,9 @@ function getCostPrice(product: ProductItem) {
   const marker = (product.compatibleModels ?? []).find((value) => value.startsWith("COST:"));
   const value = marker ? Number(marker.replace("COST:", "")) : 0;
   return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+function getCategoryFallback(name: string) {
+  return defaultCategories.find((category) => category.name.toLowerCase() === name.toLowerCase())?.img ?? defaultCategories[0].img;
 }
 

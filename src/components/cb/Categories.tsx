@@ -27,6 +27,8 @@ export function Categories() {
     };
   }, []);
 
+  const fallbackFor = (name: string) => defaultCategories.find((category) => category.name.toLowerCase() === name.toLowerCase())?.img ?? defaultCategories[0].img;
+
   return (
     <section id="categorias" className="bg-[#E7EAEE] py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
@@ -37,7 +39,7 @@ export function Categories() {
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
           {categories.map((category) => (
             <a key={category.id} href={`#${category.id}`} className="group overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(17,24,39,.08)]">
-              <img src={category.img} alt={category.name} loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
+              <img src={category.img || fallbackFor(category.name)} alt={category.name} loading="lazy" onError={(event) => { event.currentTarget.src = fallbackFor(category.name); }} className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
               <div className="flex items-center justify-between p-4"><h3 className="text-base font-semibold normal-case tracking-normal text-foreground">{category.name}</h3><span className="text-sm font-semibold text-primary">Ver</span></div>
             </a>
           ))}
