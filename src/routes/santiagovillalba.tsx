@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Search, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/santiagovillalba")({
   component: AdminPage,
@@ -59,30 +59,6 @@ function slugify(value: string) {
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
-}
-
-function parseTierPrices(input: string): TierPrice[] {
-  return input
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((chunk) => {
-      const [rangeRaw, priceRaw] = chunk.split(":").map((x) => x.trim());
-      if (!rangeRaw || !priceRaw) return null;
-      const unitPrice = Number(priceRaw);
-      if (!Number.isFinite(unitPrice)) return null;
-      if (rangeRaw.endsWith("+")) {
-        const minQty = Number(rangeRaw.replace("+", ""));
-        if (!Number.isFinite(minQty)) return null;
-        return { minQty, unitPrice };
-      }
-      const [minRaw, maxRaw] = rangeRaw.split("-").map((x) => x.trim());
-      const minQty = Number(minRaw);
-      const maxQty = Number(maxRaw);
-      if (!Number.isFinite(minQty) || !Number.isFinite(maxQty)) return null;
-      return { minQty, maxQty, unitPrice };
-    })
-    .filter((x): x is TierPrice => Boolean(x));
 }
 
 function parseColorsSimple(input: string): ColorStock[] {
@@ -171,7 +147,7 @@ function AdminPage() {
   const [cat, setCat] = useState("Mayorista");
   const [imgUrl, setImgUrl] = useState("");
   const [colorsInput, setColorsInput] = useState("");
-  const [tierInput, setTierInput] = useState("");
+  const [tierRows, setTierRows] = useState<TierPrice[]>([]);
   const [extraImages, setExtraImages] = useState("");
   const [uploading, setUploading] = useState(false);
   const [productSearch, setProductSearch] = useState("");
@@ -240,7 +216,7 @@ function AdminPage() {
     setCat(categories[0]?.name ?? "Mayorista");
     setImgUrl("");
     setColorsInput("");
-    setTierInput("");
+    setTierRows([]);
     setExtraImages("");
   }
 
@@ -263,7 +239,7 @@ function AdminPage() {
       stock: Number(stock) || 0,
       compatible_models: ["Universal", ...(Number(usdPrice) > 0 ? [`USD:${Number(usdPrice)}`] : [])],
       colors: parseColorsSimple(colorsInput),
-      tier_prices: parseTierPrices(tierInput),
+      tier_prices: tierRows.filter((tier) => tier.minQty > 0 && tier.unitPrice > 0).map((tier) => ({ minQty: Number(tier.minQty), ...(Number(tier.maxQty) > 0 ? { maxQty: Number(tier.maxQty) } : {}), unitPrice: Number(tier.unitPrice) })),
     };
 
     const method = editingId ? "PATCH" : "POST";
@@ -312,7 +288,7 @@ function AdminPage() {
     const productImages = String(p.img ?? "").split(/\r?\n/).map((url) => url.trim()).filter(Boolean);
     setImgUrl(productImages[0] ?? "");
     setColorsInput((p.colors ?? []).map((c) => c.color).join(", "));
-    setTierInput((p.tierPrices ?? []).map((t) => `${t.maxQty ? `${t.minQty}-${t.maxQty}` : `${t.minQty}+`}:${t.unitPrice}`).join(", "));
+    setTierRows((p.tierPrices ?? []).map((tier) => ({ ...tier })));
     setExtraImages(productImages.slice(1).join("\n"));
     setTab("productos");
   }
@@ -432,8 +408,20 @@ function AdminPage() {
             <label className="mt-3 block text-sm font-semibold">Colores separados por coma</label>
             <input value={colorsInput} onChange={(e) => setColorsInput(e.target.value)} placeholder="Negro, Blanco, Gris" className="mt-1 w-full border border-border bg-background px-3 py-2" />
 
-            <label className="mt-3 block text-sm font-semibold">Precios por unidad</label>
-            <input value={tierInput} onChange={(e) => setTierInput(e.target.value)} placeholder="1-9:10000,10-19:9500,20+:9000" className="mt-1 w-full border border-border bg-background px-3 py-2" />
+            <div className="mt-4 rounded-lg border border-border bg-background/60 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div><p className="text-sm font-semibold">Precios por cantidad <span className="font-normal text-muted-foreground">(opcional)</span></p><p className="mt-1 text-xs text-muted-foreground">Ejemplo: desde 10 unidades, cada una cuesta ARS 9.500.</p></div>
+                <button type="button" onClick={() => setTierRows((rows) => [...rows, { minQty: 1, unitPrice: 0 }])} className="inline-flex shrink-0 items-center gap-1 rounded-md border border-primary px-2.5 py-2 text-xs font-semibold text-primary"><Plus className="h-3.5 w-3.5" /> Agregar</button>
+              </div>
+              {tierRows.length ? <div className="mt-3 space-y-3">{tierRows.map((tier, index) => (
+                <div key={`tier-${index}`} className="grid grid-cols-[1fr_1fr_1.35fr_auto] items-end gap-2 rounded-md border border-border bg-card p-2">
+                  <label className="text-xs text-muted-foreground">Desde<input type="number" min="1" value={tier.minQty || ""} onChange={(event) => setTierRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, minQty: Number(event.target.value) } : row))} placeholder="10" className="mt-1 w-full border border-border bg-background px-2 py-2 text-sm text-foreground" /></label>
+                  <label className="text-xs text-muted-foreground">Hasta<input type="number" min="1" value={tier.maxQty ?? ""} onChange={(event) => setTierRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, maxQty: event.target.value ? Number(event.target.value) : undefined } : row))} placeholder="Sin límite" className="mt-1 w-full border border-border bg-background px-2 py-2 text-sm text-foreground" /></label>
+                  <label className="text-xs text-muted-foreground">Precio c/u<input type="number" min="0" value={tier.unitPrice || ""} onChange={(event) => setTierRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, unitPrice: Number(event.target.value) } : row))} placeholder="9500" className="mt-1 w-full border border-border bg-background px-2 py-2 text-sm text-foreground" /></label>
+                  <button type="button" aria-label="Eliminar precio" onClick={() => setTierRows((rows) => rows.filter((_, rowIndex) => rowIndex !== index))} className="mb-0.5 rounded-md border border-red-300 p-2 text-red-600"><Trash2 className="h-4 w-4" /></button>
+                </div>
+              ))}</div> : <p className="mt-3 rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">Sin descuentos por cantidad.</p>}
+            </div>
 
             <label className="mt-3 block text-sm font-semibold">Imágenes adicionales</label>
             <textarea value={extraImages} onChange={(e) => setExtraImages(e.target.value)} rows={3} className="mt-1 w-full border border-border bg-background px-3 py-2" />

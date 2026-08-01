@@ -92,8 +92,8 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   const [selectedColor, setSelectedColor] = useState<string | undefined>(p.colors?.[0]?.color);
   const remaining = Math.max(0, getColorStock(p, selectedColor) - cartQty);
   const disabled = remaining <= 0;
-  const currentUnitPrice = getUnitPrice(p, Math.max(1, cartQty));
   const usdPrice = getUsdPrice(p);
+  const tiers = (p.tierPrices ?? []).slice().sort((a, b) => a.minQty - b.minQty);
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-xl border border-[#D7DCE3] bg-[#F3F5F7] transition-shadow hover:shadow-[0_12px_30px_rgba(17,24,39,.08)]">
@@ -105,7 +105,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
           onError={(e) => {
             e.currentTarget.src = fallbackProductImage;
           }}
-          className="absolute inset-0 h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.02]"
+          className="absolute inset-0 h-full w-full object-contain p-2 transition-transform duration-500 group-hover:scale-[1.02]"
         />
         {p.tag && <span className="absolute left-3 top-3 rounded-md border border-[#C5D5ED] bg-[#EAF1FC] px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">{p.tag}</span>}
         <button
@@ -116,14 +116,23 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
           <Plus className="h-4 w-4" /> {disabled ? "Sin stock" : "Anadir al carrito"}
         </button>
       </div>
-      <div className="flex flex-col gap-1 p-4">
+      <div className="flex flex-col gap-1 p-3.5">
         {productImages.length > 1 ? <div className="mb-2 flex gap-2 overflow-x-auto">{productImages.map((image, index) => <button key={`${p.id}-image-${index}`} type="button" onClick={() => setActiveImage(image)} aria-label={`Ver imagen ${index + 1} de ${p.name}`} className={`h-10 w-10 shrink-0 overflow-hidden rounded-md border ${activeImage === image ? "border-primary" : "border-border"}`}><img src={image} alt="" className="h-full w-full object-cover" /></button>)}</div> : null}
         <span className="text-xs font-medium text-muted-foreground">{p.cat}</span>
         <h3 className="text-base font-semibold leading-snug normal-case tracking-normal text-foreground">{p.name}</h3>
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-lg font-semibold text-foreground">{formatPrice(currentUnitPrice)}</span>
+        <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Precio unitario</p>
+        <div className="flex items-baseline gap-2">
+          <span className="text-xl font-bold tracking-tight text-foreground">{formatPrice(p.price)}</span>
           {p.old && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.old)}</span>}
         </div>
+        {usdPrice ? <p className="text-sm font-bold text-emerald-700">💵 USD {new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(usdPrice)}</p> : null}
+        {tiers.length ? <div className="mt-2 overflow-hidden rounded-lg border border-[#D7DCE3] bg-white/55">
+          <p className="border-b border-[#D7DCE3] px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Precio por cantidad</p>
+          <div className="divide-y divide-[#D7DCE3]">{tiers.map((tier, index) => <div key={`${p.id}-tier-${index}`} className="flex items-center justify-between gap-3 px-2.5 py-1.5 text-xs">
+            <span className="text-muted-foreground">{tier.maxQty ? `${tier.minQty} a ${tier.maxQty} unidades` : `Desde ${tier.minQty} unidades`}</span>
+            <span className="shrink-0 font-bold text-primary">{formatPrice(tier.unitPrice)} c/u</span>
+          </div>)}</div>
+        </div> : null}
         {p.colors?.length ? (
           <div className="mt-2 flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Colores</span>
@@ -233,7 +242,6 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Catálogo</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Productos seleccionados</h2></div>
           <select aria-label="Filtrar por categoría" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-11 w-full rounded-lg border border-[#C5D5ED] bg-[#DCE8FA] px-3 text-sm text-foreground outline-none focus:border-primary sm:w-56"><option value="">Todas las categorías</option>{availableCategories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select>
         </div>
-        {usdPrice ? <p className="mt-1 text-sm font-semibold text-emerald-700">💵 USD {new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(usdPrice)}</p> : null}
           <div className="space-y-12">
             {sections.map((section) => {
               const list = filteredProducts.filter((p) => section.cats.includes(p.cat));
@@ -241,7 +249,7 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
               return (
                 <div id={section.id} key={section.id} className="scroll-mt-28">
                   <h3 className="mb-4 text-xl font-semibold normal-case tracking-normal text-foreground">{section.title}</h3>
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {list.map((p) => <ProductCard key={p.id} p={p} cartQty={cartQtyById[p.id] ?? 0} onAddToCart={onAddToCart} />)}
                   </div>
                 </div>
