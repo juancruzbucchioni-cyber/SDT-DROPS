@@ -207,7 +207,7 @@ function AdminPage() {
     setDescription("");
     setPrice(0);
     setStock(1);
-    setCat("Mayorista");
+    setCat(categories[0]?.name ?? "Mayorista");
     setImgUrl("");
     setColorsInput("");
     setTierInput("");
@@ -225,8 +225,8 @@ function AdminPage() {
       id,
       name: name.trim(),
       description: description.trim(),
-      cat: cat.trim() || "Mayorista",
-      img: imgUrl.trim(),
+      cat: cat.trim() || categories[0]?.name || "Mayorista",
+      img: [imgUrl.trim(), ...extraImages.split(/\r?\n/).map((url) => url.trim()).filter(Boolean)].filter(Boolean).join("\n"),
       price: Number(price) || 0,
       old: null,
       tag: "",
@@ -277,10 +277,11 @@ function AdminPage() {
     setPrice(p.price ?? 0);
     setStock(p.stock ?? 0);
     setCat(p.cat ?? "Mayorista");
-    setImgUrl(p.img ?? "");
+    const productImages = String(p.img ?? "").split(/\r?\n/).map((url) => url.trim()).filter(Boolean);
+    setImgUrl(productImages[0] ?? "");
     setColorsInput((p.colors ?? []).map((c) => c.color).join(", "));
     setTierInput((p.tierPrices ?? []).map((t) => `${t.maxQty ? `${t.minQty}-${t.maxQty}` : `${t.minQty}+`}:${t.unitPrice}`).join(", "));
-    setExtraImages("");
+    setExtraImages(productImages.slice(1).join("\n"));
     setTab("productos");
   }
 
@@ -360,30 +361,40 @@ function AdminPage() {
             </div>
 
             <label className="mt-3 block text-sm font-semibold">Categoria</label>
-            <input value={cat} onChange={(e) => setCat(e.target.value)} className="mt-1 w-full border border-border bg-background px-3 py-2" />
+            <select value={cat} onChange={(e) => setCat(e.target.value)} className="mt-1 w-full border border-border bg-background px-3 py-2">
+              <option value="" disabled>Seleccionar categoría</option>
+              {categories.slice().sort((a, b) => a.order - b.order).map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}
+            </select>
+            {!categories.length ? <p className="mt-1 text-xs text-amber-600">Primero creá una categoría en la pestaña Categorías.</p> : null}
 
-            <label className="mt-3 block text-sm font-semibold">Imagen principal</label>
+            <label className="mt-3 block text-sm font-semibold">Imágenes del producto</label>
+            <p className="mt-1 text-xs text-muted-foreground">Elegí una o varias imágenes de tu galería o carpeta de descargas. La primera será la principal.</p>
             <input
               type="file"
               accept="image/*"
+              multiple
               className="mt-1 w-full border border-border bg-background px-3 py-2"
               onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
+                const files = Array.from(e.target.files ?? []);
+                if (!files.length) return;
                 setUploading(true);
                 try {
-                  const url = await uploadToSupabase(file);
-                  setImgUrl(url);
-                  setMsg("Imagen subida correctamente");
+                  const urls: string[] = [];
+                  for (const file of files) urls.push(await uploadToSupabase(file));
+                  const current = [imgUrl.trim(), ...extraImages.split(/\r?\n/).map((url) => url.trim()).filter(Boolean)].filter(Boolean);
+                  const all = [...current, ...urls];
+                  setImgUrl(all[0] ?? "");
+                  setExtraImages(all.slice(1).join("\n"));
+                  setMsg(`${urls.length} ${urls.length === 1 ? "imagen subida" : "imágenes subidas"} correctamente`);
                 } catch (err: any) {
-                  setMsg(err?.message ?? "Error al subir imagen");
+                  setMsg(err?.message ?? "Error al subir imágenes");
                 } finally {
                   setUploading(false);
                 }
               }}
             />
 
-            <label className="mt-3 block text-sm font-semibold">Imagen principal URL</label>
+            <label className="mt-3 block text-sm font-semibold">Imagen principal</label>
             <input value={imgUrl} onChange={(e) => setImgUrl(e.target.value)} className="mt-1 w-full border border-border bg-background px-3 py-2" />
 
             <label className="mt-3 block text-sm font-semibold">Colores separados por coma</label>
@@ -392,7 +403,7 @@ function AdminPage() {
             <label className="mt-3 block text-sm font-semibold">Precios por unidad</label>
             <input value={tierInput} onChange={(e) => setTierInput(e.target.value)} placeholder="1-9:10000,10-19:9500,20+:9000" className="mt-1 w-full border border-border bg-background px-3 py-2" />
 
-            <label className="mt-3 block text-sm font-semibold">Mas imagenes, una por linea</label>
+            <label className="mt-3 block text-sm font-semibold">Imágenes adicionales</label>
             <textarea value={extraImages} onChange={(e) => setExtraImages(e.target.value)} rows={3} className="mt-1 w-full border border-border bg-background px-3 py-2" />
 
             <div className="mt-4 flex gap-2">

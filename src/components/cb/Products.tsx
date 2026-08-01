@@ -56,11 +56,9 @@ function resolveColorCss(color: string) {
   return map[c] ?? color;
 }
 
-function resolveImageSrc(src?: string) {
-  const value = String(src ?? "").trim();
-  if (!value) return fallbackProductImage;
-  if (value.startsWith("http://") || value.startsWith("https://")) return value;
-  return fallbackProductImage;
+function resolveImageSources(src?: string) {
+  const values = String(src ?? "").split(/\r?\n/).map((value) => value.trim()).filter((value) => value.startsWith("http://") || value.startsWith("https://"));
+  return values.length ? values : [fallbackProductImage];
 }
 
 export function getUnitPrice(product: ProductItem, qty: number) {
@@ -83,6 +81,8 @@ function formatPrice(value: number) {
 }
 
 function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: number; onAddToCart: (product: ProductItem, color?: string) => void }) {
+  const productImages = resolveImageSources(p.img);
+  const [activeImage, setActiveImage] = useState(productImages[0]);
   const [selectedColor, setSelectedColor] = useState<string | undefined>(p.colors?.[0]?.color);
   const remaining = Math.max(0, getColorStock(p, selectedColor) - cartQty);
   const disabled = remaining <= 0;
@@ -92,7 +92,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
     <article className="group relative flex flex-col overflow-hidden rounded-xl border border-[#D7DCE3] bg-[#F3F5F7] transition-shadow hover:shadow-[0_12px_30px_rgba(17,24,39,.08)]">
       <div className="relative aspect-square overflow-hidden bg-[#E8EBEF]">
         <img
-          src={resolveImageSrc(p.img)}
+          src={activeImage}
           alt={p.name}
           loading="lazy"
           onError={(e) => {
@@ -110,6 +110,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
         </button>
       </div>
       <div className="flex flex-col gap-1 p-4">
+        {productImages.length > 1 ? <div className="mb-2 flex gap-2 overflow-x-auto">{productImages.map((image, index) => <button key={`${p.id}-image-${index}`} type="button" onClick={() => setActiveImage(image)} aria-label={`Ver imagen ${index + 1} de ${p.name}`} className={`h-10 w-10 shrink-0 overflow-hidden rounded-md border ${activeImage === image ? "border-primary" : "border-border"}`}><img src={image} alt="" className="h-full w-full object-cover" /></button>)}</div> : null}
         <span className="text-xs font-medium text-muted-foreground">{p.cat}</span>
         <h3 className="text-base font-semibold leading-snug normal-case tracking-normal text-foreground">{p.name}</h3>
         <div className="mt-2 flex items-baseline gap-2">
