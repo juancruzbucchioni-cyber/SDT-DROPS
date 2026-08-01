@@ -243,7 +243,7 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
           <select aria-label="Filtrar por categoría" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-11 w-full rounded-lg border border-[#C5D5ED] bg-[#DCE8FA] px-3 text-sm text-foreground outline-none focus:border-primary sm:w-56"><option value="">Todas las categorías</option>{availableCategories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select>
         </div>
           <div className="space-y-12">
-            {sections.map((section) => {
+            {sections.slice().sort((a, b) => a.title.localeCompare(b.title, "es", { sensitivity: "base" })).map((section) => {
               const list = filteredProducts.filter((p) => section.cats.includes(p.cat));
               if (!list.length) return null;
               return (
