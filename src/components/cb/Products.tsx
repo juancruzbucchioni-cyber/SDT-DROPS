@@ -126,11 +126,11 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
           {p.old && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.old)}</span>}
         </div>
         {usdPrice ? <p className="text-sm font-bold text-emerald-700">💵 USD {new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(usdPrice)}</p> : null}
-        {tiers.length ? <div className="mt-2 overflow-hidden rounded-lg border border-[#D7DCE3] bg-white/55">
-          <p className="border-b border-[#D7DCE3] px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Precio por cantidad</p>
-          <div className="divide-y divide-[#D7DCE3]">{tiers.map((tier, index) => <div key={`${p.id}-tier-${index}`} className="flex items-center justify-between gap-3 px-2.5 py-1.5 text-xs">
-            <span className="text-muted-foreground">{tier.maxQty ? `${tier.minQty} a ${tier.maxQty} unidades` : `Desde ${tier.minQty} unidades`}</span>
-            <span className="shrink-0 font-bold text-primary">{formatPrice(tier.unitPrice)} c/u</span>
+        {tiers.length ? <div className="mt-2 overflow-hidden rounded-lg border border-[#AFC9F2] bg-[#E7F0FE]">
+          <p className="border-b border-[#AFC9F2] bg-[#D7E7FC] px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-[#1554B8]">Precio por cantidad</p>
+          <div className="divide-y divide-[#BFD3F2]">{tiers.map((tier, index) => <div key={`${p.id}-tier-${index}`} className="flex items-center justify-between gap-3 px-2.5 py-1.5 text-xs">
+            <span className="font-medium text-[#31547D]">{tier.maxQty ? `${tier.minQty} a ${tier.maxQty} unidades` : `Desde ${tier.minQty} unidades`}</span>
+            <span className="shrink-0 font-bold text-[#0B5ED7]">{formatPrice(tier.unitPrice)} c/u</span>
           </div>)}</div>
         </div> : null}
         {p.colors?.length ? (
