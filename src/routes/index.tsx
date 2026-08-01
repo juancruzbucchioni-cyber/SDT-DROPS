@@ -3,10 +3,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/cb/Header";
 import { Hero } from "@/components/cb/Hero";
 import { Products, getColorStock, getUnitPrice, type ProductItem } from "@/components/cb/Products";
-import { Instagram } from "@/components/cb/Instagram";
 import { Contact } from "@/components/cb/Contact";
 import { Footer } from "@/components/cb/Footer";
-import { TrendingProducts } from "@/components/cb/TrendingProducts";
+import { Categories } from "@/components/cb/Categories";
+import { CatalogCta, TrustSection } from "@/components/cb/CommerceSections";
 import { initializeCloudSync } from "@/lib/cloud-sync";
 
 export const Route = createFileRoute("/")({
@@ -110,15 +110,7 @@ function Index() {
   );
 
   return (
-    <main className="relative min-h-screen text-foreground">
-      <div
-        className="pointer-events-none fixed inset-0 -z-20 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 40% 65%, #14356f 0%, #0f2f66 35%, #0b2656 65%, #081a3f 100%)",
-        }}
-      />
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-background/72" />
+    <main className="min-h-screen bg-background text-foreground">
       <Header
         cart={cart}
         cartCount={cartCount}
@@ -130,9 +122,10 @@ function Index() {
         onClear={clearCart}
       />
       <Hero />
-      <TrendingProducts />
+      <Categories />
       <Products onAddToCart={addToCart} cartQtyById={cartQtyById} />
-      <Instagram />
+      <TrustSection />
+      <CatalogCta />
       <Contact />
       <Footer />
     </main>

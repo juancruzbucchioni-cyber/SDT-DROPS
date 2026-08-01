@@ -89,8 +89,8 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   const currentUnitPrice = getUnitPrice(p, Math.max(1, cartQty));
 
   return (
-    <article className="group relative flex flex-col rounded-2xl border border-border/80 bg-card/55 backdrop-blur-sm glow-hover overflow-hidden">
-      <div className="relative aspect-square overflow-hidden rounded-t-2xl">
+    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-[0_12px_30px_rgba(17,24,39,.08)]">
+      <div className="relative aspect-square overflow-hidden bg-[#F8F9FA]">
         <img
           src={resolveImageSrc(p.img)}
           alt={p.name}
@@ -98,50 +98,36 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
           onError={(e) => {
             e.currentTarget.src = fallbackProductImage;
           }}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          className="absolute inset-0 h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.02]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
-        {p.tag && <span className="absolute left-3 top-3 rounded-lg border border-primary bg-background/80 px-2 py-1 font-display text-[10px] font-bold tracking-widest text-neon backdrop-blur">{p.tag}</span>}
+        {p.tag && <span className="absolute left-3 top-3 rounded-md border border-border bg-white px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary">{p.tag}</span>}
         <button
           disabled={disabled}
           onClick={() => onAddToCart(p, selectedColor)}
-          className="absolute inset-x-3 bottom-3 inline-flex rounded-xl translate-y-0 items-center justify-center gap-2 border border-primary bg-primary/95 px-4 py-3 font-display text-xs font-bold uppercase tracking-widest text-primary-foreground opacity-100 transition-all lg:translate-y-3 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="absolute inset-x-3 bottom-3 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white opacity-100 transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 lg:opacity-0 lg:group-hover:opacity-100"
         >
           <Plus className="h-4 w-4" /> {disabled ? "Sin stock" : "Anadir al carrito"}
         </button>
       </div>
-      <div className="flex flex-col gap-1 rounded-b-2xl p-5">
-        <span className="font-display text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{p.cat}</span>
-        <h3 className="font-display text-base font-bold leading-tight text-foreground">{p.name}</h3>
-        {p.description ? <p className="text-xs text-muted-foreground">{p.description}</p> : null}
-        <p className="text-xs text-muted-foreground">Compatibilidad: {p.compatibleModels.join(", ")}</p>
-        <p className="text-xs text-muted-foreground">Stock disponible: <span className="text-neon font-bold">{remaining}</span></p>
+      <div className="flex flex-col gap-1 p-4">
+        <span className="text-xs font-medium text-muted-foreground">{p.cat}</span>
+        <h3 className="text-base font-semibold leading-snug normal-case tracking-normal text-foreground">{p.name}</h3>
         <div className="mt-2 flex items-baseline gap-2">
-          <span className="font-display text-xl font-bold text-neon">{formatPrice(currentUnitPrice)}</span>
+          <span className="text-lg font-semibold text-foreground">{formatPrice(currentUnitPrice)}</span>
           {p.old && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.old)}</span>}
         </div>
-        {p.tierPrices?.length ? (
-          <div className="mt-2 rounded-xl border border-border/70 bg-background/35 p-2 text-[10px] uppercase tracking-wide text-muted-foreground">
-            {p.tierPrices.map((t, idx) => (
-              <div key={`${p.id}-tier-${idx}`}>
-                {t.maxQty ? `${t.minQty}-${t.maxQty}` : `${t.minQty}+`} unid: <span className="font-bold text-neon">{formatPrice(t.unitPrice)}</span>
-              </div>
-            ))}
-          </div>
-        ) : null}
         {p.colors?.length ? (
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Colores:</span>
+            <span className="text-xs text-muted-foreground">Colores</span>
             <div className="flex flex-wrap gap-1.5">
               {p.colors.map((c, idx) => (
                 <button
                   type="button"
                   key={`${p.id}-color-${idx}`}
                   onClick={() => setSelectedColor(c.color)}
-                  className={`inline-flex items-center gap-1 rounded-xl border px-1.5 py-0.5 text-[10px] ${selectedColor === c.color ? "border-primary bg-primary/10" : "border-border"}`}
+                  className={`inline-flex items-center gap-1 rounded-full border p-1 ${selectedColor === c.color ? "border-primary" : "border-border"}`}
                 >
                   <span title={c.color} className="h-3.5 w-3.5 rounded-full border border-border" style={{ backgroundColor: resolveColorCss(c.color) }} />
-                  <span className="font-bold text-neon">{c.stock}</span>
                 </button>
               ))}
             </div>
@@ -164,7 +150,6 @@ const sections = [
 
 export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: ProductItem, color?: string) => void; cartQtyById: Record<string, number> }) {
   const [products, setProducts] = useState<ProductItem[]>([]);
-  const [selectedModel, setSelectedModel] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isHydrated, setIsHydrated] = useState(false);
@@ -215,12 +200,6 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
     return () => window.removeEventListener("sdt-product-search", searchHandler as EventListener);
   }, []);
 
-  const availableModels = useMemo(() => {
-    const set = new Set<string>();
-    products.forEach((p) => p.compatibleModels.forEach((m) => { if (m !== "Universal") set.add(m); }));
-    return Array.from(set).sort();
-  }, [products]);
-
   const availableCategories = useMemo(() => {
     const set = new Set<string>();
     products.forEach((p) => set.add(p.cat));
@@ -228,80 +207,39 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   }, [products]);
 
   const filteredProducts = useMemo(() => {
-    const byModel = !selectedModel
-      ? products
-      : products.filter((p) => p.compatibleModels.includes(selectedModel) || p.compatibleModels.includes("Universal"));
-    const byCategory = !selectedCategory ? byModel : byModel.filter((p) => p.cat === selectedCategory);
+    const byCategory = !selectedCategory ? products : products.filter((p) => p.cat === selectedCategory);
     const bySearch = !searchTerm
       ? byCategory
       : byCategory.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
     return bySearch.slice().sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }));
-  }, [products, selectedModel, selectedCategory, searchTerm]);
+  }, [products, selectedCategory, searchTerm]);
 
   if (!isHydrated || !isSyncReady) {
-    return <section id="productos" className="relative border-b border-border py-24"><div className="mx-auto max-w-7xl px-4 md:px-8 text-sm text-muted-foreground">Cargando productos...</div></section>;
+    return <section id="productos" className="border-b border-border bg-[#F8F9FA] py-20"><div className="mx-auto max-w-7xl px-4 text-sm text-muted-foreground md:px-8">Cargando productos…</div></section>;
   }
 
   return (
-    <section id="productos" className="relative border-b border-border py-24">
+    <section id="productos" className="border-y border-border bg-[#F8F9FA] py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="font-display text-xs font-semibold uppercase tracking-[0.4em] text-neon">// 02 - Catalogo</div>
-            <h2 className="mt-3 font-display text-4xl font-bold md:text-6xl">Productos por categoria</h2>
-          </div>
-          <div className="w-full max-w-sm border border-border bg-card/70 p-3">
-            <label htmlFor="model-filter" className="mb-2 block font-display text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Filtro adicional (opcional)</label>
-            <select id="model-filter" value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} className="w-full border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary">
-              <option value="">Ver todos los productos</option>
-              {availableModels.map((model) => <option key={model} value={model}>{model}</option>)}
-            </select>
-          </div>
+        <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Catálogo</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Productos seleccionados</h2></div>
+          <select aria-label="Filtrar por categoría" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none focus:border-primary sm:w-56"><option value="">Todas las categorías</option>{availableCategories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select>
         </div>
-
-        {selectedModel && <p className="mb-8 text-sm text-muted-foreground">Mostrando productos filtrados por <span className="font-bold text-neon">{selectedModel}</span>.</p>}
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[290px_minmax(0,1fr)] lg:items-start">
-          <aside className="border border-border bg-card/65 p-5 backdrop-blur-sm lg:sticky lg:top-28">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-display text-xl font-bold uppercase tracking-widest text-neon">Categorias</h3>
-              <button
-                onClick={() => setSelectedCategory("")}
-                className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-neon"
-              >
-                Reiniciar
-              </button>
-            </div>
-            <div className="space-y-2">
-              <label className="inline-flex items-center gap-2 text-sm">
-                <input type="radio" name="cat-filter" checked={selectedCategory === ""} onChange={() => setSelectedCategory("")} />
-                Todas las categorias
-              </label>
-              {availableCategories.map((cat) => (
-                <label key={cat} className="inline-flex items-center gap-2 text-sm">
-                  <input type="radio" name="cat-filter" checked={selectedCategory === cat} onChange={() => setSelectedCategory(cat)} />
-                  {cat}
-                </label>
-              ))}
-            </div>
-          </aside>
-
           <div className="space-y-12">
             {sections.map((section) => {
               const list = filteredProducts.filter((p) => section.cats.includes(p.cat));
               if (!list.length) return null;
               return (
                 <div id={section.id} key={section.id} className="scroll-mt-28">
-                  <h3 className="mb-4 font-display text-2xl font-bold uppercase tracking-widest text-neon">{section.title}</h3>
+                  <h3 className="mb-4 text-xl font-semibold normal-case tracking-normal text-foreground">{section.title}</h3>
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                     {list.map((p) => <ProductCard key={p.id} p={p} cartQty={cartQtyById[p.id] ?? 0} onAddToCart={onAddToCart} />)}
                   </div>
                 </div>
               );
             })}
-            {filteredProducts.length === 0 && <div className="border border-border bg-card/60 p-6 text-center"><p className="font-display text-lg font-bold uppercase">No hay productos para ese filtro</p><p className="mt-2 text-sm text-muted-foreground">Carga productos en Supabase para mostrarlos aqui.</p></div>}
+            {filteredProducts.length === 0 && <div className="rounded-xl border border-border bg-white p-8 text-center"><p className="text-base font-semibold">No hay productos para ese filtro</p><p className="mt-2 text-sm text-muted-foreground">Probá con otra categoría o búsqueda.</p></div>}
           </div>
-        </div>
       </div>
     </section>
   );

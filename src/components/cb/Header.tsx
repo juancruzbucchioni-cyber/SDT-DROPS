@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
-import { Menu, ShoppingBag, Plus, Minus, Trash2, Search } from "lucide-react";
+import { Menu, ShoppingBag, Plus, Minus, Trash2, Search, UserRound } from "lucide-react";
 import logo from "@/assets/logo.png";
 import type { CartItem } from "@/routes/index";
 import type { ProductItem } from "@/components/cb/Products";
 import { getColorStock, getUnitPrice } from "@/components/cb/Products";
 
-const nav = ["Catalogo", "Comunidad Emprendedora", "Contacto", "Instagram"];
+const nav = [
+  { label: "Inicio", href: "/" },
+  { label: "Productos", href: "#productos" },
+  { label: "Categorías", href: "#categorias" },
+  { label: "Nosotros", href: "#nosotros" },
+  { label: "Contacto", href: "#contacto" },
+];
 const ORDERS_STORAGE_KEY = "sdt_drops_orders_v1";
 
 function formatPrice(value: number) {
@@ -121,7 +127,7 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-border bg-white/95 backdrop-blur-xl">
 
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-8">
           <a href="/" aria-label="Recargar SDT DROPS y volver al inicio" className="flex shrink-0 items-center gap-2.5">
@@ -135,15 +141,13 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
           </a>
 
           <nav className="ml-auto hidden items-center gap-5 xl:gap-7 lg:flex">
-            {nav.map((n) => (
+            {nav.map((item) => (
               <a
-                key={n}
-                href={n === "Catalogo" ? "#productos" : n === "Comunidad Emprendedora" ? "https://chat.whatsapp.com/HayGktRhVcvGnIPqLQxuWt" : n === "Contacto" ? "#contacto" : "https://instagram.com/santi.villalbaa_"}
-                className={`whitespace-nowrap font-display text-xs font-semibold uppercase tracking-[0.14em] transition-colors hover:text-neon xl:text-sm ${n === "Comunidad Emprendedora" ? "text-neon" : "text-muted-foreground"}`}
-                target={n === "Instagram" || n === "Comunidad Emprendedora" ? "_blank" : undefined}
-                rel={n === "Instagram" || n === "Comunidad Emprendedora" ? "noreferrer" : undefined}
+                key={item.label}
+                href={item.href}
+                className="whitespace-nowrap text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
               >
-                {n}
+                {item.label}
               </a>
             ))}
           </nav>
@@ -165,6 +169,7 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
               <ShoppingBag className="h-5 w-5" />
               <span className="absolute -right-0 -top-0 grid h-4 w-4 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{cartCount}</span>
             </button>
+            <a href="/santiagovillalba" aria-label="Cuenta" className="hidden h-10 w-10 place-items-center text-muted-foreground transition-colors hover:text-primary sm:grid"><UserRound className="h-5 w-5" /></a>
             <button onClick={() => setMobileOpen((value) => !value)} aria-label="Abrir menú" aria-expanded={mobileOpen} className="grid h-10 w-10 place-items-center text-foreground lg:hidden">
               <Menu className="h-5 w-5" />
             </button>
@@ -186,16 +191,14 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
                 className="h-11 w-full rounded-xl border border-border bg-card/70 pl-9 pr-3 text-foreground outline-none focus:border-primary"
               />
             </label>
-            {nav.map((n) => (
+            {nav.map((item) => (
               <a
-                key={`m-${n}`}
-                href={n === "Catalogo" ? "#productos" : n === "Comunidad Emprendedora" ? "https://chat.whatsapp.com/HayGktRhVcvGnIPqLQxuWt" : n === "Contacto" ? "#contacto" : "https://instagram.com/santi.villalbaa_"}
+                key={`m-${item.label}`}
+                href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`rounded-lg px-3 py-3 font-display text-xs font-semibold uppercase tracking-widest transition-colors hover:bg-card hover:text-neon ${n === "Comunidad Emprendedora" ? "text-neon" : "text-muted-foreground"}`}
-                target={n === "Instagram" || n === "Comunidad Emprendedora" ? "_blank" : undefined}
-                rel={n === "Instagram" || n === "Comunidad Emprendedora" ? "noreferrer" : undefined}
+                className="rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
               >
-                {n}
+                {item.label}
               </a>
             ))}
           </nav>
