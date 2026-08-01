@@ -368,6 +368,9 @@ function AdminPage() {
               </div>
             </div>
 
+            <label className="mt-3 block text-sm font-semibold text-emerald-700">Precio USD <span className="font-normal text-muted-foreground">(opcional)</span></label>
+            <input type="number" min="0" step="0.01" value={usdPrice} onChange={(e) => setUsdPrice(e.target.value === "" ? "" : Number(e.target.value))} placeholder="Ej: 120" className="mt-1 w-full border border-emerald-400 bg-emerald-50 px-3 py-2 text-emerald-800 outline-none focus:border-emerald-600" />
+
             <label className="mt-3 block text-sm font-semibold">Categoria</label>
             <select value={cat} onChange={(e) => setCat(e.target.value)} className="mt-1 w-full border border-border bg-background px-3 py-2">
               <option value="" disabled>Seleccionar categoría</option>
@@ -459,8 +462,6 @@ function AdminPage() {
               </select>
             </div>
 
-            <label className="mt-3 block text-sm font-semibold text-emerald-700">💵 Precio USD <span className="font-normal text-muted-foreground">(opcional)</span></label>
-            <input type="number" min="0" step="0.01" value={usdPrice} onChange={(e) => setUsdPrice(e.target.value === "" ? "" : Number(e.target.value))} placeholder="Ej: 120" className="mt-1 w-full border border-emerald-400 bg-emerald-50 px-3 py-2 text-emerald-800 outline-none focus:border-emerald-600" />
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
               <span>{filteredAdminItems.length} {filteredAdminItems.length === 1 ? "producto" : "productos"}</span>
               <div className="flex gap-2">
