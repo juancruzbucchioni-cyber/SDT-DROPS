@@ -611,7 +611,33 @@ function CategoryRow({
         <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="w-full border border-border bg-background px-2 py-1" />
       </td>
       <td className="px-2 py-2">
-        <input value={draft.img} onChange={(e) => setDraft({ ...draft, img: e.target.value })} className="w-full border border-border bg-background px-2 py-1" />
+        <div className="min-w-[260px] space-y-2">
+          {draft.img ? <img src={draft.img} alt={`Imagen de ${draft.name}`} className="h-16 w-24 rounded-md border border-border object-cover" /> : null}
+          <input value={draft.img} onChange={(e) => setDraft({ ...draft, img: e.target.value })} placeholder="URL de la imagen" className="w-full border border-border bg-background px-2 py-1" />
+          <label className="inline-flex cursor-pointer items-center rounded-md border border-border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:border-primary">
+            {busy ? "Subiendo…" : "Elegir de galería"}
+            <input
+              type="file"
+              accept="image/*"
+              disabled={busy}
+              className="sr-only"
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                setBusy(true);
+                try {
+                  const url = await uploadToSupabase(file);
+                  setDraft((current) => ({ ...current, img: url }));
+                } catch (error: any) {
+                  window.alert(error?.message ?? "No se pudo subir la imagen");
+                } finally {
+                  setBusy(false);
+                  event.target.value = "";
+                }
+              }}
+            />
+          </label>
+        </div>
       </td>
       <td className="px-2 py-2">
         <input type="number" value={draft.order} onChange={(e) => setDraft({ ...draft, order: Number(e.target.value) || 0 })} className="w-24 border border-border bg-background px-2 py-1" />
