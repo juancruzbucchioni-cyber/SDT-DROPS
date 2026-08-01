@@ -7,16 +7,6 @@ import type { ProductItem } from "@/components/cb/Products";
 import { getColorStock, getUnitPrice } from "@/components/cb/Products";
 
 const nav = ["Catalogo", "Comunidad Emprendedora", "Contacto", "Instagram"];
-const catalogLinks = [
-  { label: "Celulares", href: "#cat-celulares" },
-  { label: "Perfumes", href: "#cat-perfumes" },
-  { label: "Stanley", href: "#cat-stanley" },
-  { label: "Relojes", href: "#cat-relojes" },
-  { label: "Accesorios", href: "#cat-accesorios" },
-  { label: "Camisetas", href: "#cat-camisetas" },
-  { label: "Mayorista", href: "#cat-mayorista" },
-];
-
 const ORDERS_STORAGE_KEY = "sdt_drops_orders_v1";
 
 function formatPrice(value: number) {
@@ -50,16 +40,6 @@ type OrderRecord = {
 export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, onUpdateColor, onRemove, onClear }: HeaderProps) {
   const [open, setOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [compact, setCompact] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const lineKey = (item: CartItem) => `${item.id}::${item.selectedColor ?? "sin-color"}`;
-
-  useEffect(() => {
-    const onScroll = () => setCompact((window.scrollY || 0) > 120);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (ev: KeyboardEvent) => {
@@ -68,10 +48,6 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent("sdt-product-search", { detail: { term: searchTerm } }));
-  }, [searchTerm]);
 
   const handleCheckout = () => {
     if (!cart.length) return;
@@ -198,32 +174,6 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
           </nav>
         </div>
       )}
-
-      <div className="hidden border-t border-border/60 md:block">
-        <div className={`mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 md:px-8 ${compact ? "py-1.5" : "py-2"}`}>
-          {catalogLinks.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className={`shrink-0 border border-border bg-card/60 font-display font-bold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:border-primary hover:text-neon ${compact ? "px-2.5 py-1 text-[10px]" : "px-3 py-1.5 text-xs"}`}
-            >
-              {item.label}
-            </a>
-          ))}
-
-          <div className="ml-auto min-w-[190px] shrink-0 sm:min-w-[240px] md:min-w-[300px]">
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar producto..."
-              className={`w-full border border-border bg-card/70 text-foreground outline-none focus:border-primary ${
-                compact ? "px-2 py-1 text-[11px]" : "px-3 py-1.5 text-xs"
-              }`}
-            />
-          </div>
-
-        </div>
-      </div>
 
     </header>
   );
