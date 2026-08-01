@@ -228,24 +228,24 @@ function CartPanel({ cart, cartTotal, onIncrement, onDecrement, onUpdateColor, o
     return acc;
   }, {});
   return (
-    <div className={`${compact ? "relative" : "absolute right-0 top-12"} z-50 w-[330px] border border-border bg-card p-4 shadow-2xl md:w-[380px]`}>
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-display text-lg font-bold uppercase tracking-widest">Carrito</h3>
+    <div className={`${compact ? "relative" : "absolute right-0 top-14"} z-50 w-[min(380px,calc(100vw-24px))] rounded-xl border border-[#C9D1DC] bg-[#F3F5F7] p-5 text-foreground shadow-[0_20px_50px_rgba(7,22,50,.22)]`}>
+      <div className="mb-4 flex items-center justify-between border-b border-[#D7DCE3] pb-4">
+        <h3 className="text-lg font-semibold normal-case tracking-normal text-foreground">Tu carrito</h3>
         {cart.length > 0 && (
-          <button onClick={onClear} className="text-xs uppercase tracking-widest text-muted-foreground hover:text-neon">
+          <button onClick={onClear} className="text-xs font-semibold text-muted-foreground transition-colors hover:text-primary">
             Vaciar
           </button>
         )}
       </div>
       {cart.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No hay productos en el carrito.</p>
+        <div className="py-8 text-center"><ShoppingBag className="mx-auto h-7 w-7 text-muted-foreground/60" /><p className="mt-3 text-sm text-muted-foreground">No hay productos en el carrito.</p></div>
       ) : (
         <div className="space-y-3">
           {cart.map((item) => (
-            <div key={lineKey(item)} className="border border-border bg-background/60 p-3">
+            <div key={lineKey(item)} className="rounded-lg border border-[#D7DCE3] bg-[#E8ECF1] p-4">
               <div className="flex items-start justify-between gap-2">
-                <p className="font-display text-sm font-bold uppercase leading-tight">{item.name}</p>
-                <button onClick={() => onRemove(lineKey(item))} className="text-muted-foreground hover:text-neon" aria-label="Eliminar">
+                <p className="pr-2 text-sm font-semibold leading-snug text-foreground">{item.name}</p>
+                <button onClick={() => onRemove(lineKey(item))} className="text-muted-foreground transition-colors hover:text-red-600" aria-label="Eliminar">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -253,7 +253,7 @@ function CartPanel({ cart, cartTotal, onIncrement, onDecrement, onUpdateColor, o
                 <select
                   value={item.selectedColor ?? item.colors[0].color}
                   onChange={(e) => onUpdateColor(lineKey(item), e.target.value)}
-                  className="mt-2 w-full border border-border bg-background px-2 py-1 text-xs"
+                  className="mt-3 w-full rounded-md border border-[#C9D1DC] bg-[#F3F5F7] px-2 py-2 text-xs text-foreground"
                 >
                   {item.colors.map((c) => (
                     <option key={`${item.id}-${c.color}`} value={c.color}>
@@ -262,28 +262,28 @@ function CartPanel({ cart, cartTotal, onIncrement, onDecrement, onUpdateColor, o
                   ))}
                 </select>
               ) : null}
-              <p className="mt-1 text-sm text-neon">{formatPrice(getUnitPrice(item, qtyByProductId[item.id] ?? item.qty))} c/u</p>
-              <p className="text-xs text-muted-foreground">Stock: {item.qty}/{getColorStock(item, item.selectedColor)}</p>
-              <div className="mt-2 flex items-center justify-between">
+              <p className="mt-3 text-sm font-semibold text-primary">{formatPrice(getUnitPrice(item, qtyByProductId[item.id] ?? item.qty))} c/u</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Stock: {item.qty}/{getColorStock(item, item.selectedColor)}</p>
+              <div className="mt-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <button onClick={() => onDecrement(lineKey(item))} className="grid h-7 w-7 place-items-center border border-border hover:border-primary">
+                  <button onClick={() => onDecrement(lineKey(item))} className="grid h-8 w-8 place-items-center rounded-md border border-[#C9D1DC] bg-[#F3F5F7] text-foreground hover:border-primary">
                     <Minus className="h-3 w-3" />
                   </button>
-                  <span className="min-w-5 text-center text-sm font-bold">{item.qty}</span>
-                  <button disabled={item.qty >= getColorStock(item, item.selectedColor)} onClick={() => onIncrement(lineKey(item))} className="grid h-7 w-7 place-items-center border border-border hover:border-primary disabled:cursor-not-allowed disabled:opacity-40">
+                  <span className="min-w-5 text-center text-sm font-semibold text-foreground">{item.qty}</span>
+                  <button disabled={item.qty >= getColorStock(item, item.selectedColor)} onClick={() => onIncrement(lineKey(item))} className="grid h-8 w-8 place-items-center rounded-md border border-[#C9D1DC] bg-[#F3F5F7] text-foreground hover:border-primary disabled:cursor-not-allowed disabled:opacity-40">
                     <Plus className="h-3 w-3" />
                   </button>
                 </div>
-                <span className="font-display text-sm font-bold">{formatPrice(getUnitPrice(item, qtyByProductId[item.id] ?? item.qty) * item.qty)}</span>
+                <span className="text-sm font-semibold text-foreground">{formatPrice(getUnitPrice(item, qtyByProductId[item.id] ?? item.qty) * item.qty)}</span>
               </div>
             </div>
           ))}
-          <div className="mt-3 border-t border-border pt-3">
-            <div className="mb-3 flex items-center justify-between font-display text-sm uppercase">
-              <span>Total</span>
-              <span className="text-neon">{formatPrice(cartTotal)}</span>
+          <div className="mt-4 border-t border-[#D7DCE3] pt-4">
+            <div className="mb-4 flex items-center justify-between text-sm">
+              <span className="font-medium text-muted-foreground">Total</span>
+              <span className="text-lg font-semibold text-foreground">{formatPrice(cartTotal)}</span>
             </div>
-            <button onClick={onCheckout} className="inline-flex w-full items-center justify-center border border-primary bg-primary px-4 py-3 font-display text-xs font-bold uppercase tracking-widest text-primary-foreground glow-neon">
+            <button onClick={onCheckout} className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-blue-600">
               Confirmar compra
             </button>
           </div>
