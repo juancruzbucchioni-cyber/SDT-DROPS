@@ -154,6 +154,7 @@ function AdminPage() {
   const [productSearch, setProductSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [stockFilter, setStockFilter] = useState<"all" | "available" | "low" | "empty">("all");
+  const [profitFilter, setProfitFilter] = useState<"all" | "missing" | "profit" | "loss" | "high">("all");
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -210,6 +211,16 @@ function AdminPage() {
     }
     return stats;
   }, { saleValue: 0, costedSaleValue: 0, costValue: 0, profitValue: 0, withCost: 0 }), [items]);
+  const filteredProfitItems = useMemo(() => filteredAdminItems.filter((product) => {
+    const cost = getCostPrice(product);
+    const profit = product.price - cost;
+    const margin = product.price > 0 ? (profit / product.price) * 100 : 0;
+    if (profitFilter === "missing") return cost <= 0;
+    if (profitFilter === "profit") return cost > 0 && profit >= 0;
+    if (profitFilter === "loss") return cost > 0 && profit < 0;
+    if (profitFilter === "high") return cost > 0 && margin >= 30;
+    return true;
+  }), [filteredAdminItems, profitFilter]);
 
   function toggleCategory(category: string) {
     setCollapsedCategories((current) => {
@@ -618,14 +629,14 @@ function AdminPage() {
         <section className="rounded-xl border border-border bg-card/65 p-4">
           <h2 className="text-xl font-semibold">Costos y ganancias</h2>
           <p className="mt-1 text-sm text-muted-foreground">Los costos son privados y nunca aparecen en la tienda.</p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2"><input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Buscar producto…" className="h-11 rounded-md border border-border bg-background px-3 text-sm" /><select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="h-11 rounded-md border border-border bg-background px-3 text-sm"><option value="">Todas las categorías</option>{categories.map((category) => <option key={`profit-${category.id}`} value={category.name}>{category.name}</option>)}</select></div>
-          <div className="mt-4 grid gap-3 xl:grid-cols-2">{filteredAdminItems.map((product) => <ProfitRow key={`profit-${product.id}`} item={product} onSave={async (salePrice, costPrice) => {
+          <div className="mt-4 rounded-lg border border-border bg-background/50 p-3"><div className="grid gap-2 md:grid-cols-[minmax(220px,1fr)_190px_190px_auto]"><input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Buscar producto…" className="h-10 rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary" /><select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="h-10 rounded-md border border-border bg-background px-3 text-sm"><option value="">Todas las categorías</option>{categories.map((category) => <option key={`profit-${category.id}`} value={category.name}>{category.name}</option>)}</select><select value={profitFilter} onChange={(event) => setProfitFilter(event.target.value as typeof profitFilter)} className="h-10 rounded-md border border-border bg-background px-3 text-sm"><option value="all">Todos los resultados</option><option value="missing">Sin costo cargado</option><option value="profit">Con ganancia</option><option value="loss">Con pérdida</option><option value="high">Margen de 30% o más</option></select><button type="button" onClick={() => { setProductSearch(""); setCategoryFilter(""); setProfitFilter("all"); }} className="h-10 rounded-md border border-border bg-card px-3 text-xs font-semibold hover:border-primary">Limpiar</button></div><p className="mt-2 text-xs text-muted-foreground">{filteredProfitItems.length} productos encontrados</p></div>
+          <div className="mt-4 grid gap-3 xl:grid-cols-2">{filteredProfitItems.map((product) => <ProfitRow key={`profit-${product.id}`} item={product} onSave={async (salePrice, costPrice) => {
             const compatibleModels = [...(product.compatibleModels ?? []).filter((value) => !value.startsWith("COST:")), ...(costPrice > 0 ? [`COST:${costPrice}`] : [])];
             const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${encodeURIComponent(product.id)}`, { method: "PATCH", headers: { ...headers(), Prefer: "return=representation" }, body: JSON.stringify({ price: salePrice, compatible_models: compatibleModels }) });
             if (!res.ok) throw new Error(`No se pudo guardar: ${await res.text()}`);
             await reload();
             setMsg(`Ganancia actualizada: ${product.name}`);
-          }} />)}</div>
+          }} />)}{!filteredProfitItems.length ? <div className="col-span-full rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">No hay productos para esos filtros.</div> : null}</div>
         </section>
       ) : null}
     </main>
@@ -643,10 +654,11 @@ function ProfitRow({ item, onSave }: { item: ProductItem; onSave: (salePrice: nu
   useEffect(() => { setSale(item.price); setCost(getCostPrice(item)); }, [item]);
   const profit = sale - cost;
   const margin = sale > 0 ? (profit / sale) * 100 : 0;
-  return <article className="rounded-lg border border-border bg-background/60 p-3">
-    <div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold">{item.name}</h3><p className="text-xs text-muted-foreground">{item.cat} · Stock: {item.stock}</p></div><span className={`rounded-full px-2 py-1 text-xs font-bold ${profit >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{margin.toFixed(1)}%</span></div>
-    <div className="mt-3 grid grid-cols-2 gap-2"><label className="text-xs text-muted-foreground">Costo unitario<input type="number" min="0" value={cost || ""} onChange={(event) => setCost(Number(event.target.value))} className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground" /></label><label className="text-xs text-muted-foreground">Precio de venta<input type="number" min="0" value={sale || ""} onChange={(event) => setSale(Number(event.target.value))} className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground" /></label></div>
-    <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3"><div><p className="text-xs text-muted-foreground">Ganancia por unidad</p><p className={`font-bold ${profit >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatPrice(profit)}</p></div><button disabled={busy} onClick={async () => { setBusy(true); try { await onSave(sale, cost); } finally { setBusy(false); } }} className="rounded-md bg-primary px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{busy ? "Guardando…" : "Guardar"}</button></div>
+  const status = cost <= 0 ? "missing" : profit >= 0 ? "profit" : "loss";
+  return <article className={`rounded-xl border bg-white/55 p-3 ${status === "loss" ? "border-red-200" : status === "profit" ? "border-emerald-200" : "border-blue-200"}`}>
+    <div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold text-foreground">{item.name}</h3><p className="text-xs text-muted-foreground">{item.cat} · Stock: {item.stock}</p></div><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${status === "missing" ? "bg-blue-100 text-blue-700" : status === "profit" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{status === "missing" ? "Falta costo" : `${margin.toFixed(1)}%`}</span></div>
+    <div className="mt-3 grid grid-cols-2 gap-2"><label className="rounded-lg bg-blue-50 p-2 text-xs font-semibold text-blue-700">Costo unitario<input type="number" min="0" value={cost || ""} onChange={(event) => setCost(Number(event.target.value))} className="mt-1 w-full rounded-md border border-blue-200 bg-white px-2.5 py-2 text-sm text-foreground outline-none focus:border-blue-500" /></label><label className="rounded-lg bg-violet-50 p-2 text-xs font-semibold text-violet-700">Precio de venta<input type="number" min="0" value={sale || ""} onChange={(event) => setSale(Number(event.target.value))} className="mt-1 w-full rounded-md border border-violet-200 bg-white px-2.5 py-2 text-sm text-foreground outline-none focus:border-violet-500" /></label></div>
+    <div className={`mt-3 flex items-center justify-between gap-3 rounded-lg px-3 py-2 ${status === "loss" ? "bg-red-50" : "bg-emerald-50"}`}><div><p className="text-xs text-muted-foreground">Ganancia por unidad</p><p className={`font-bold ${status === "loss" ? "text-red-700" : "text-emerald-700"}`}>{cost > 0 ? formatPrice(profit) : "Cargá el costo"}</p></div><button disabled={busy} onClick={async () => { setBusy(true); try { await onSave(sale, cost); } finally { setBusy(false); } }} className="rounded-md bg-primary px-3 py-2 text-xs font-bold text-white shadow-sm disabled:opacity-60">{busy ? "Guardando…" : "Guardar"}</button></div>
   </article>;
 }
 
