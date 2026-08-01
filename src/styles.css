@@ -64,6 +64,7 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
@@ -73,6 +74,17 @@
   input, select, textarea, button {
     border-radius: 0.75rem;
   }
+  html { scroll-behavior: smooth; }
+  a, button { -webkit-tap-highlight-color: transparent; }
+}
+
+@media (max-width: 640px) {
+  input, select, textarea { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
 @layer utilities {

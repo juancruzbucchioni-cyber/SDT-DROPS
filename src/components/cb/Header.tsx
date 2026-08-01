@@ -49,6 +49,7 @@ type OrderRecord = {
 
 export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, onUpdateColor, onRemove, onClear }: HeaderProps) {
   const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [compact, setCompact] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const lineKey = (item: CartItem) => `${item.id}::${item.selectedColor ?? "sin-color"}`;
@@ -142,8 +143,7 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
   return (
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl">
 
-      {!compact && (
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="SDT DROPS" width={40} height={40} className="h-10 w-10 object-contain drop-shadow-[0_0_12px_color-mix(in_oklab,var(--neon)_60%,transparent)]" />
             <div className="hidden leading-none sm:block">
@@ -173,40 +173,34 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
               <ShoppingBag className="h-5 w-5" />
               <span className="absolute -right-0 -top-0 grid h-4 w-4 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{cartCount}</span>
             </button>
-            <button aria-label="Menu" className="grid h-10 w-10 place-items-center text-foreground lg:hidden">
+            <button onClick={() => setMobileOpen((value) => !value)} aria-label="Abrir menú" aria-expanded={mobileOpen} className="grid h-10 w-10 place-items-center text-foreground lg:hidden">
               <Menu className="h-5 w-5" />
             </button>
             {open && <CartPanel cart={cart} cartTotal={cartTotal} onIncrement={onIncrement} onDecrement={onDecrement} onUpdateColor={onUpdateColor} onRemove={onRemove} onClear={onClear} onCheckout={handleCheckout} />}
           </div>
         </div>
-      )}
 
-      {!compact && (
-        <div className="border-t border-border/60 lg:hidden">
-          <div className="mx-auto flex max-w-7xl items-center gap-4 overflow-x-auto px-4 py-2 md:px-8">
+      {mobileOpen && (
+        <div className="border-t border-border/60 bg-background/95 lg:hidden">
+          <nav className="mx-auto grid max-w-7xl gap-1 px-4 py-3 md:px-8">
             {nav.map((n) => (
               <a
                 key={`m-${n}`}
                 href={n === "Catalogo" ? "#productos" : n === "Comunidad Emprendedora" ? "https://chat.whatsapp.com/HayGktRhVcvGnIPqLQxuWt" : n === "Contacto" ? "#contacto" : "https://instagram.com/santi.villalbaa_"}
-                className={`shrink-0 font-display text-[11px] font-semibold uppercase tracking-widest transition-colors hover:text-neon ${n === "Comunidad Emprendedora" ? "text-neon" : "text-muted-foreground"}`}
+                onClick={() => setMobileOpen(false)}
+                className={`rounded-lg px-3 py-3 font-display text-xs font-semibold uppercase tracking-widest transition-colors hover:bg-card hover:text-neon ${n === "Comunidad Emprendedora" ? "text-neon" : "text-muted-foreground"}`}
                 target={n === "Instagram" || n === "Comunidad Emprendedora" ? "_blank" : undefined}
                 rel={n === "Instagram" || n === "Comunidad Emprendedora" ? "noreferrer" : undefined}
               >
                 {n}
               </a>
             ))}
-          </div>
+          </nav>
         </div>
       )}
 
-      <div className="border-t border-border/60">
+      <div className="hidden border-t border-border/60 md:block">
         <div className={`mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-4 md:px-8 ${compact ? "py-1.5" : "py-2"}`}>
-          {compact && (
-            <Link to="/" className="mr-1 shrink-0 border border-border bg-card/60 px-2 py-1">
-              <img src={logo} alt="SDT DROPS" className="h-6 w-6 object-contain" />
-            </Link>
-          )}
-
           {catalogLinks.map((item) => (
             <a
               key={item.href}
@@ -228,20 +222,8 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
             />
           </div>
 
-          {compact && (
-            <button onClick={() => setOpen((v) => !v)} aria-label="Carrito" className="relative grid h-7 w-7 shrink-0 place-items-center border border-border text-muted-foreground hover:text-neon">
-              <ShoppingBag className="h-4 w-4" />
-              <span className="absolute -right-1 -top-1 grid h-3.5 w-3.5 place-items-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">{cartCount}</span>
-            </button>
-          )}
         </div>
       </div>
-
-      {compact && open && (
-        <div className="mx-auto max-w-7xl px-4 pb-2 md:px-8">
-          <CartPanel cart={cart} cartTotal={cartTotal} onIncrement={onIncrement} onDecrement={onDecrement} onUpdateColor={onUpdateColor} onRemove={onRemove} onClear={onClear} onCheckout={handleCheckout} compact />
-        </div>
-      )}
 
     </header>
   );
