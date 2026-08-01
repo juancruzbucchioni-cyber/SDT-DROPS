@@ -289,6 +289,30 @@ function AdminPage() {
     if (editingId === id) clearForm();
   }
 
+  async function adjustStock(product: ProductItem, amount: number) {
+    const nextStock = Math.max(0, (product.stock || 0) + amount);
+    if (nextStock === product.stock) return;
+    const previousItems = items;
+    const nextItems = items.map((item) => item.id === product.id ? { ...item, stock: nextStock } : item);
+    setItems(nextItems);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextItems));
+    window.dispatchEvent(new CustomEvent("sdt-products-updated"));
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${encodeURIComponent(product.id)}`, {
+        method: "PATCH",
+        headers: { ...headers(), Prefer: "return=minimal" },
+        body: JSON.stringify({ stock: nextStock }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setMsg(`Stock de ${product.name}: ${nextStock}`);
+    } catch (error: any) {
+      setItems(previousItems);
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(previousItems));
+      window.dispatchEvent(new CustomEvent("sdt-products-updated"));
+      setMsg(`No se pudo actualizar el stock: ${error?.message ?? error}`);
+    }
+  }
+
   function startEdit(p: ProductItem) {
     setEditingId(p.id);
     setName(p.name);
@@ -513,7 +537,15 @@ function AdminPage() {
                             <td className="px-2 py-3">{p.name}</td>
                             <td className="px-2 py-3">{p.cat}</td>
                             <td className="px-2 py-3">{formatPrice(p.price)}</td>
-                            <td className="px-2 py-3">{p.stock}</td>
+                            <td className="px-2 py-3">
+                              <div className="inline-flex items-center overflow-hidden rounded-md border border-border bg-background">
+                                <button type="button" title="Restar 10" onClick={() => void adjustStock(p, -10)} className="border-r border-border px-2 py-1.5 text-[10px] font-bold text-red-600 hover:bg-red-50">−10</button>
+                                <button type="button" title="Restar 1" onClick={() => void adjustStock(p, -1)} className="border-r border-border px-2 py-1.5 text-sm font-bold hover:bg-card">−</button>
+                                <span className="min-w-10 px-2 py-1.5 text-center font-bold text-primary">{p.stock}</span>
+                                <button type="button" title="Sumar 1" onClick={() => void adjustStock(p, 1)} className="border-l border-border px-2 py-1.5 text-sm font-bold hover:bg-card">+</button>
+                                <button type="button" title="Sumar 10" onClick={() => void adjustStock(p, 10)} className="border-l border-border px-2 py-1.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50">+10</button>
+                              </div>
+                            </td>
                             <td className="px-2 py-3">
                               <div className="flex gap-2">
                                 <button className="border border-border bg-card px-2 py-1 text-xs uppercase" onClick={() => startEdit(p)}>Editar</button>
