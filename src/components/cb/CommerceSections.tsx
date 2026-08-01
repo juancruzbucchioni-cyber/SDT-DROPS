@@ -9,7 +9,7 @@ const benefits = [
 
 export function TrustSection() {
   return (
-    <section id="nosotros" className="border-y border-[#C5D5ED] bg-[#DCE7F7] py-16 sm:py-20">
+    <section id="nosotros" className="border-y border-[#D7DCE3] bg-[#E5E9EE] py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="mb-10 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Por qué elegirnos</p>
@@ -19,7 +19,7 @@ export function TrustSection() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {benefits.map(({ Icon, title, text }, index) => (
-            <article key={title} className="group rounded-xl border border-[#BCD0EC] bg-[#EAF1FC] p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_28px_rgba(17,54,112,.09)]">
+            <article key={title} className="group rounded-xl border border-[#D7DCE3] bg-[#F3F5F7] p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_28px_rgba(17,54,112,.09)]">
               <div className="flex items-start justify-between">
                 <span className="grid h-11 w-11 place-items-center rounded-lg bg-[#071632] text-blue-100"><Icon className="h-5 w-5" strokeWidth={1.7} /></span>
                 <span className="text-xs font-semibold text-primary/55">0{index + 1}</span>
@@ -36,7 +36,7 @@ export function TrustSection() {
 
 export function CatalogCta() {
   return (
-    <section className="bg-[#DCE4EE] py-16 sm:py-20">
+    <section className="bg-[#E7EAEE] py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="relative overflow-hidden rounded-2xl bg-[#071632] px-6 py-10 text-white shadow-[0_16px_40px_rgba(7,22,50,.18)] sm:px-10 sm:py-12">
           <div className="relative flex flex-col items-start justify-between gap-7 md:flex-row md:items-center">

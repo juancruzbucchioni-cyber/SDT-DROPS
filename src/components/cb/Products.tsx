@@ -89,8 +89,8 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   const currentUnitPrice = getUnitPrice(p, Math.max(1, cartQty));
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-[#C5D5ED] bg-[#DCE8FA] transition-shadow hover:shadow-[0_12px_30px_rgba(17,24,39,.08)]">
-      <div className="relative aspect-square overflow-hidden bg-[#EAF1FC]">
+    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-[#D7DCE3] bg-[#F3F5F7] transition-shadow hover:shadow-[0_12px_30px_rgba(17,24,39,.08)]">
+      <div className="relative aspect-square overflow-hidden bg-[#E8EBEF]">
         <img
           src={resolveImageSrc(p.img)}
           alt={p.name}
@@ -215,11 +215,11 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   }, [products, selectedCategory, searchTerm]);
 
   if (!isHydrated || !isSyncReady) {
-    return <section id="productos" className="border-b border-border bg-[#DFE7F1] py-20"><div className="mx-auto max-w-7xl px-4 text-sm text-muted-foreground md:px-8">Cargando productos…</div></section>;
+    return <section id="productos" className="border-b border-border bg-[#ECEFF3] py-20"><div className="mx-auto max-w-7xl px-4 text-sm text-muted-foreground md:px-8">Cargando productos…</div></section>;
   }
 
   return (
-    <section id="productos" className="border-y border-border bg-[#DFE7F1] py-16 sm:py-20">
+    <section id="productos" className="border-y border-border bg-[#ECEFF3] py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Catálogo</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Productos seleccionados</h2></div>

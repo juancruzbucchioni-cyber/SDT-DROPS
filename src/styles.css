@@ -35,17 +35,17 @@
 
 :root {
   --radius: 0.25rem;
-  --background: #E2E8F0;
+  --background: #ECEFF3;
   --foreground: #111827;
-  --card: #DCE8FA;
+  --card: #F3F5F7;
   --card-foreground: #111827;
-  --popover: #DCE8FA;
+  --popover: #F3F5F7;
   --popover-foreground: #111827;
   --primary: #1959D1;
   --primary-foreground: #FFFFFF;
-  --secondary: #D7E0EB;
+  --secondary: #E4E8ED;
   --secondary-foreground: #111827;
-  --muted: #D7E0EB;
+  --muted: #E4E8ED;
   --muted-foreground: #6B7280;
   --accent: oklch(0.66 0.29 255);
   --accent-foreground: oklch(0.08 0.01 255);
