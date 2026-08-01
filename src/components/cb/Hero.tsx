@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 
 export function Hero() {
   return (
-    <section id="inicio" className="border-b border-border bg-[#EAF1FC]">
+    <section id="inicio" className="border-b border-border bg-[#DFE7F1]">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 md:px-8 lg:grid-cols-[.9fr_1.1fr] lg:py-24">
         <div className="max-w-xl">
           <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">Importación · Distribución · Mayorista</p>

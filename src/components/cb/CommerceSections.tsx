@@ -36,7 +36,7 @@ export function TrustSection() {
 
 export function CatalogCta() {
   return (
-    <section className="bg-[#E4ECF8] py-16 sm:py-20">
+    <section className="bg-[#DCE4EE] py-16 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="relative overflow-hidden rounded-2xl bg-[#071632] px-6 py-10 text-white shadow-[0_16px_40px_rgba(7,22,50,.18)] sm:px-10 sm:py-12">
           <div className="relative flex flex-col items-start justify-between gap-7 md:flex-row md:items-center">
