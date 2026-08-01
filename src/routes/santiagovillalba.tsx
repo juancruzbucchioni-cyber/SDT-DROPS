@@ -156,6 +156,9 @@ function AdminPage() {
   const [stockFilter, setStockFilter] = useState<"all" | "available" | "low" | "empty">("all");
   const [profitFilter, setProfitFilter] = useState<"all" | "missing" | "profit" | "loss" | "high">("all");
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryImg, setNewCategoryImg] = useState("");
+  const [categoryBusy, setCategoryBusy] = useState(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(ADMIN_SESSION_KEY);
@@ -322,6 +325,29 @@ function AdminPage() {
       window.dispatchEvent(new CustomEvent("sdt-products-updated"));
       setMsg(`No se pudo actualizar el stock: ${error?.message ?? error}`);
     }
+  }
+
+  async function createCategory() {
+    const cleanName = newCategoryName.trim();
+    if (!cleanName) { setMsg("Escribí el nombre de la categoría"); return; }
+    const id = slugify(cleanName);
+    const payload = { id, name: cleanName, img: newCategoryImg.trim(), order: Math.max(0, ...categories.map((category) => category.order)) + 1 };
+    setCategoryBusy(true);
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/categories`, { method: "POST", headers: { ...headers(), Prefer: "return=representation" }, body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error(await res.text());
+      setNewCategoryName(""); setNewCategoryImg("");
+      await reload(); setMsg(`Categoría creada: ${cleanName}`);
+    } finally { setCategoryBusy(false); }
+  }
+
+  async function removeCategory(category: CategoryItem) {
+    const productsInCategory = items.filter((product) => product.cat.toLowerCase() === category.name.toLowerCase()).length;
+    const warning = productsInCategory ? `\nHay ${productsInCategory} productos en esta categoría. Los productos no se borrarán.` : "";
+    if (!window.confirm(`¿Eliminar la categoría ${category.name}?${warning}`)) return;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/categories?id=eq.${encodeURIComponent(category.id)}`, { method: "DELETE", headers: headers() });
+    if (!res.ok) throw new Error(await res.text());
+    await reload(); setMsg(`Categoría eliminada: ${category.name}`);
   }
 
   function startEdit(p: ProductItem) {
@@ -585,6 +611,10 @@ function AdminPage() {
       {tab === "categorias" ? (
         <section className="rounded-xl border border-border bg-card/65 p-4">
           <div className="mb-4"><h2 className="text-lg font-semibold">Categorías</h2><p className="text-xs text-muted-foreground">Editá el nombre, la imagen y el orden de aparición.</p></div>
+          <div className="mb-4 rounded-lg border border-primary/25 bg-[#E7F0FE] p-3">
+            <p className="text-sm font-semibold text-primary">Crear categoría</p>
+            <div className="mt-2 grid gap-2 md:grid-cols-[minmax(180px,1fr)_minmax(200px,1.2fr)_auto_auto]"><input value={newCategoryName} onChange={(event) => setNewCategoryName(event.target.value)} placeholder="Nombre de la categoría" className="h-10 rounded-md border border-border bg-white px-3 text-sm" /><input value={newCategoryImg} onChange={(event) => setNewCategoryImg(event.target.value)} placeholder="URL de imagen (opcional)" className="h-10 rounded-md border border-border bg-white px-3 text-sm" /><label className="inline-flex h-10 cursor-pointer items-center rounded-md border border-border bg-white px-3 text-xs font-semibold hover:border-primary">{categoryBusy ? "Subiendo…" : "Elegir imagen"}<input type="file" accept="image/*" disabled={categoryBusy} className="sr-only" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; setCategoryBusy(true); try { setNewCategoryImg(await uploadToSupabase(file)); setMsg("Imagen lista para crear la categoría"); } catch (error: any) { setMsg(error?.message ?? "No se pudo subir"); } finally { setCategoryBusy(false); event.target.value = ""; } }} /></label><button disabled={categoryBusy} onClick={() => void createCategory().catch((error) => setMsg(`No se pudo crear: ${error?.message ?? error}`))} className="h-10 rounded-md bg-primary px-4 text-sm font-bold text-white disabled:opacity-60">{categoryBusy ? "Procesando…" : "Crear categoría"}</button></div>
+          </div>
           <div className="grid gap-3 lg:grid-cols-2">
                 {categories.slice().sort((a, b) => a.order - b.order).map((c) => (
                   <CategoryRow
@@ -603,6 +633,7 @@ function AdminPage() {
                       await reload();
                       setMsg(`Categoria guardada: ${next.name}`);
                     }}
+                    onDelete={() => void removeCategory(c).catch((error) => setMsg(`No se pudo eliminar: ${error?.message ?? error}`))}
                   />
                 ))}
           </div>
@@ -685,9 +716,11 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
 function CategoryRow({
   item,
   onSave,
+  onDelete,
 }: {
   item: CategoryItem;
   onSave: (next: CategoryItem) => Promise<void>;
+  onDelete: () => void;
 }) {
   const [draft, setDraft] = useState<CategoryItem>(item);
   const [busy, setBusy] = useState(false);
@@ -731,6 +764,7 @@ function CategoryRow({
             />
           </label>
           <button disabled={busy} className="rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-white" onClick={async () => { setBusy(true); try { await onSave(draft); } finally { setBusy(false); } }}>Guardar cambios</button>
+          <button disabled={busy} onClick={onDelete} className="rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100">Eliminar</button>
           </div>
         </div>
       </div>
