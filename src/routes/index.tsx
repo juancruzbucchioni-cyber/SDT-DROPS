@@ -6,7 +6,6 @@ import { Products, getColorStock, getUnitPrice, type ProductItem } from "@/compo
 import { Instagram } from "@/components/cb/Instagram";
 import { Contact } from "@/components/cb/Contact";
 import { Footer } from "@/components/cb/Footer";
-import { ProductLines } from "@/components/cb/ProductLines";
 import { TrendingProducts } from "@/components/cb/TrendingProducts";
 import { initializeCloudSync } from "@/lib/cloud-sync";
 
@@ -131,7 +130,6 @@ function Index() {
         onClear={clearCart}
       />
       <Hero />
-      <ProductLines />
       <TrendingProducts />
       <Products onAddToCart={addToCart} cartQtyById={cartQtyById} />
       <Instagram />
