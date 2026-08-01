@@ -26,7 +26,7 @@ type ProductItem = {
 
 type CategoryItem = { id: string; name: string; img: string; order: number };
 
-type TabKey = "productos" | "categorias";
+type TabKey = "productos" | "categorias" | "estadisticas" | "ganancias";
 
 const STORAGE_KEY = "sdt_drops_products_v3";
 const ADMIN_SESSION_KEY = "sdt_admin_ok_v1";
@@ -197,6 +197,18 @@ function AdminPage() {
     groups.get(key)!.push(product);
     return groups;
   }, new Map())).sort((a, b) => a[0].localeCompare(b[0], "es")), [filteredAdminItems]);
+  const businessStats = useMemo(() => items.reduce((stats, product) => {
+    const stockQty = Math.max(0, product.stock || 0);
+    const cost = getCostPrice(product);
+    stats.saleValue += product.price * stockQty;
+    if (cost > 0) {
+      stats.costValue += cost * stockQty;
+      stats.costedSaleValue += product.price * stockQty;
+      stats.profitValue += (product.price - cost) * stockQty;
+      stats.withCost += 1;
+    }
+    return stats;
+  }, { saleValue: 0, costedSaleValue: 0, costValue: 0, profitValue: 0, withCost: 0 }), [items]);
 
   function toggleCategory(category: string) {
     setCollapsedCategories((current) => {
@@ -339,9 +351,11 @@ function AdminPage() {
         <StatCard title="Stock bajo" value={lowStock} />
       </div>
 
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap gap-2">
         <TabBtn active={tab === "productos"} onClick={() => setTab("productos")}>Productos</TabBtn>
         <TabBtn active={tab === "categorias"} onClick={() => setTab("categorias")}>Categorias</TabBtn>
+        <TabBtn active={tab === "estadisticas"} onClick={() => setTab("estadisticas")}>Estadísticas</TabBtn>
+        <TabBtn active={tab === "ganancias"} onClick={() => setTab("ganancias")}>Ganancias</TabBtn>
       </div>
 
       {msg ? <p className="mb-4 text-sm text-amber-300">{msg}</p> : null}
@@ -550,8 +564,57 @@ function AdminPage() {
           </div>
         </section>
       ) : null}
+
+      {tab === "estadisticas" ? (
+        <section className="rounded-xl border border-border bg-card/65 p-4">
+          <h2 className="text-xl font-semibold">Estadísticas del negocio</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Estimaciones calculadas con el stock, costo y precio de venta.</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard label="Valor del inventario" value={formatPrice(businessStats.saleValue)} detail="Stock al precio de venta" />
+            <MetricCard label="Costo del inventario" value={formatPrice(businessStats.costValue)} detail="Inversión estimada" />
+            <MetricCard label="Ganancia estimada" value={formatPrice(businessStats.profitValue)} detail="Si se vende todo el stock" accent />
+            <MetricCard label="Costos cargados" value={`${businessStats.withCost} / ${items.length}`} detail="Productos con costo definido" />
+            <MetricCard label="Margen general" value={businessStats.costedSaleValue > 0 ? `${((businessStats.profitValue / businessStats.costedSaleValue) * 100).toFixed(1)}%` : "0%"} detail="Sobre productos con costo" accent />
+            <MetricCard label="Unidades en stock" value={String(totalStock)} detail="En todas las categorías" />
+            <MetricCard label="Stock bajo" value={String(lowStock)} detail="Cinco unidades o menos" />
+          </div>
+        </section>
+      ) : null}
+
+      {tab === "ganancias" ? (
+        <section className="rounded-xl border border-border bg-card/65 p-4">
+          <h2 className="text-xl font-semibold">Costos y ganancias</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Los costos son privados y nunca aparecen en la tienda.</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2"><input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Buscar producto…" className="h-11 rounded-md border border-border bg-background px-3 text-sm" /><select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="h-11 rounded-md border border-border bg-background px-3 text-sm"><option value="">Todas las categorías</option>{categories.map((category) => <option key={`profit-${category.id}`} value={category.name}>{category.name}</option>)}</select></div>
+          <div className="mt-4 grid gap-3 xl:grid-cols-2">{filteredAdminItems.map((product) => <ProfitRow key={`profit-${product.id}`} item={product} onSave={async (salePrice, costPrice) => {
+            const compatibleModels = [...(product.compatibleModels ?? []).filter((value) => !value.startsWith("COST:")), ...(costPrice > 0 ? [`COST:${costPrice}`] : [])];
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${encodeURIComponent(product.id)}`, { method: "PATCH", headers: { ...headers(), Prefer: "return=representation" }, body: JSON.stringify({ price: salePrice, compatible_models: compatibleModels }) });
+            if (!res.ok) throw new Error(`No se pudo guardar: ${await res.text()}`);
+            await reload();
+            setMsg(`Ganancia actualizada: ${product.name}`);
+          }} />)}</div>
+        </section>
+      ) : null}
     </main>
   );
+}
+
+function MetricCard({ label, value, detail, accent = false }: { label: string; value: string; detail: string; accent?: boolean }) {
+  return <div className={`rounded-lg border p-4 ${accent ? "border-primary/40 bg-[#E7F0FE]" : "border-border bg-background/60"}`}><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p><p className={`mt-2 text-2xl font-bold ${accent ? "text-primary" : "text-foreground"}`}>{value}</p><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div>;
+}
+
+function ProfitRow({ item, onSave }: { item: ProductItem; onSave: (salePrice: number, costPrice: number) => Promise<void> }) {
+  const [sale, setSale] = useState(item.price);
+  const [cost, setCost] = useState(getCostPrice(item));
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { setSale(item.price); setCost(getCostPrice(item)); }, [item]);
+  const profit = sale - cost;
+  const margin = sale > 0 ? (profit / sale) * 100 : 0;
+  return <article className="rounded-lg border border-border bg-background/60 p-3">
+    <div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold">{item.name}</h3><p className="text-xs text-muted-foreground">{item.cat} · Stock: {item.stock}</p></div><span className={`rounded-full px-2 py-1 text-xs font-bold ${profit >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{margin.toFixed(1)}%</span></div>
+    <div className="mt-3 grid grid-cols-2 gap-2"><label className="text-xs text-muted-foreground">Costo unitario<input type="number" min="0" value={cost || ""} onChange={(event) => setCost(Number(event.target.value))} className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground" /></label><label className="text-xs text-muted-foreground">Precio de venta<input type="number" min="0" value={sale || ""} onChange={(event) => setSale(Number(event.target.value))} className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground" /></label></div>
+    <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3"><div><p className="text-xs text-muted-foreground">Ganancia por unidad</p><p className={`font-bold ${profit >= 0 ? "text-emerald-700" : "text-red-700"}`}>{formatPrice(profit)}</p></div><button disabled={busy} onClick={async () => { setBusy(true); try { await onSave(sale, cost); } finally { setBusy(false); } }} className="rounded-md bg-primary px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{busy ? "Guardando…" : "Guardar"}</button></div>
+  </article>;
 }
 
 function StatCard({ title, value }: { title: string; value: number }) {
@@ -629,5 +692,11 @@ function CategoryRow({
       <details className="mt-2"><summary className="cursor-pointer text-xs text-muted-foreground">Editar URL manualmente</summary><input value={draft.img} onChange={(e) => setDraft({ ...draft, img: e.target.value })} placeholder="URL de la imagen" className="mt-2 w-full rounded-md border border-border bg-background px-2.5 py-2 text-xs" /></details>
     </article>
   );
+}
+
+function getCostPrice(product: ProductItem) {
+  const marker = (product.compatibleModels ?? []).find((value) => value.startsWith("COST:"));
+  const value = marker ? Number(marker.replace("COST:", "")) : 0;
+  return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
