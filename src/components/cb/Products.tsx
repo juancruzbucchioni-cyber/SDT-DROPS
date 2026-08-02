@@ -236,9 +236,9 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   }
 
   return (
-    <section id="productos" className="border-y border-border bg-[#ECEFF3] py-16 sm:py-20">
+    <section id="productos" className="border-y border-border bg-[#ECEFF3] py-12 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
-        <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+        <div className="mb-7 flex flex-col justify-between gap-4 sm:mb-10 sm:flex-row sm:items-end sm:gap-5">
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Catálogo</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Productos seleccionados</h2></div>
           <select aria-label="Filtrar por categoría" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-11 w-full rounded-lg border border-[#C5D5ED] bg-[#DCE8FA] px-3 text-sm text-foreground outline-none focus:border-primary sm:w-56"><option value="">Todas las categorías</option>{availableCategories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select>
         </div>

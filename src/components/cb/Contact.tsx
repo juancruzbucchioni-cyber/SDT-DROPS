@@ -28,13 +28,13 @@ function ContactCard({ item }: { item: ContactItem }) {
 
 export function Contact() {
   return (
-    <section id="contacto" className="relative overflow-hidden border-b border-border py-16 sm:py-24">
+    <section id="contacto" className="relative overflow-hidden border-b border-border py-12 sm:py-24">
       <div className="relative mx-auto max-w-7xl px-4 md:px-8">
         <div className="max-w-4xl">
           <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Contacto</div>
-          <h2 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Hablá con <span className="text-primary">SDT DROPS</span></h2>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">Hablá con <span className="text-primary">SDT DROPS</span></h2>
           <p className="mt-4 max-w-md text-muted-foreground">Atención rápida y personalizada. Te ayudamos a elegir el producto ideal para vos o para tu negocio.</p>
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">{contactItems.map((item) => <ContactCard key={item.label} item={item} />)}</div>
+          <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2">{contactItems.map((item) => <ContactCard key={item.label} item={item} />)}</div>
         </div>
       </div>
     </section>

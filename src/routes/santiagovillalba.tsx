@@ -416,7 +416,7 @@ function AdminPage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-6 text-foreground">
+    <main className="mx-auto max-w-7xl px-3 py-4 text-foreground sm:px-4 sm:py-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-bold uppercase">Panel administrador</h1>
@@ -436,7 +436,7 @@ function AdminPage() {
         <StatCard title="Stock bajo" value={lowStock} />
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
         <TabBtn active={tab === "productos"} onClick={() => setTab("productos")}>Productos</TabBtn>
         <TabBtn active={tab === "categorias"} onClick={() => setTab("categorias")}>Categorias</TabBtn>
         <TabBtn active={tab === "ganancias"} onClick={() => setTab("ganancias")}>Ganancias</TabBtn>
@@ -516,11 +516,11 @@ function AdminPage() {
                 <button type="button" onClick={() => setTierRows((rows) => [...rows, { minQty: 1, unitPrice: 0 }])} className="inline-flex shrink-0 items-center gap-1 rounded-md border border-primary px-2.5 py-2 text-xs font-semibold text-primary"><Plus className="h-3.5 w-3.5" /> Agregar</button>
               </div>
               {tierRows.length ? <div className="mt-3 space-y-3">{tierRows.map((tier, index) => (
-                <div key={`tier-${index}`} className="grid grid-cols-[1fr_1fr_1.35fr_auto] items-end gap-2 rounded-md border border-border bg-card p-2">
+                <div key={`tier-${index}`} className="grid grid-cols-1 items-end gap-2 rounded-md border border-border bg-card p-2 sm:grid-cols-[1fr_1fr_1.35fr_auto]">
                   <label className="text-xs text-muted-foreground">Desde<input type="number" min="1" value={tier.minQty || ""} onChange={(event) => setTierRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, minQty: Number(event.target.value) } : row))} placeholder="10" className="mt-1 w-full border border-border bg-background px-2 py-2 text-sm text-foreground" /></label>
                   <label className="text-xs text-muted-foreground">Hasta<input type="number" min="1" value={tier.maxQty ?? ""} onChange={(event) => setTierRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, maxQty: event.target.value ? Number(event.target.value) : undefined } : row))} placeholder="Sin límite" className="mt-1 w-full border border-border bg-background px-2 py-2 text-sm text-foreground" /></label>
                   <label className="text-xs text-muted-foreground">Precio c/u<input type="number" min="0" value={tier.unitPrice || ""} onChange={(event) => setTierRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, unitPrice: Number(event.target.value) } : row))} placeholder="9500" className="mt-1 w-full border border-border bg-background px-2 py-2 text-sm text-foreground" /></label>
-                  <button type="button" aria-label="Eliminar precio" onClick={() => setTierRows((rows) => rows.filter((_, rowIndex) => rowIndex !== index))} className="mb-0.5 rounded-md border border-red-300 p-2 text-red-600"><Trash2 className="h-4 w-4" /></button>
+                  <button type="button" aria-label="Eliminar precio" onClick={() => setTierRows((rows) => rows.filter((_, rowIndex) => rowIndex !== index))} className="mb-0.5 inline-flex items-center justify-center gap-2 rounded-md border border-red-300 p-2 text-red-600 sm:w-9"><Trash2 className="h-4 w-4" /><span className="text-xs sm:hidden">Eliminar precio</span></button>
                 </div>
               ))}</div> : <p className="mt-3 rounded-md border border-dashed border-border p-3 text-center text-xs text-muted-foreground">Sin descuentos por cantidad.</p>}
             </div>
@@ -568,12 +568,21 @@ function AdminPage() {
                 <button onClick={() => setCollapsedCategories(new Set())} className="rounded-md border border-border bg-background px-3 py-1.5 hover:border-primary">Expandir todo</button>
               </div>
             </div>
-            <div className="overflow-auto">
-              <table className="w-full min-w-[700px] text-sm">
+            <div className="space-y-3 sm:hidden">
+              {groupedAdminItems.map(([categoryName, list]) => <div key={`mobile-${categoryName}`} className="overflow-hidden rounded-lg border border-border bg-background/55">
+                <button onClick={() => toggleCategory(categoryName)} className="flex w-full items-center justify-between bg-primary/10 px-3 py-3 text-left text-xs font-bold uppercase tracking-wide text-primary"><span className="flex items-center gap-2">{collapsedCategories.has(categoryName) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}{categoryName}</span><span>{list.length}</span></button>
+                {!collapsedCategories.has(categoryName) ? <div className="divide-y divide-border">{list.slice().sort((a, b) => a.name.localeCompare(b.name, "es")).map((p) => <article key={`mobile-product-${p.id}`} className="p-3">
+                  <div className="flex items-start justify-between gap-2"><div className="min-w-0"><h3 className="text-sm font-semibold leading-snug">{p.name}</h3><p className="mt-1 text-xs font-bold text-primary">{formatPrice(p.price)}</p></div><div className="flex shrink-0 gap-1"><button className="rounded-md border border-border bg-card px-2 py-1.5 text-[11px] font-semibold" onClick={() => startEdit(p)}>Editar</button><button className="rounded-md border border-red-300 bg-red-50 px-2 py-1.5 text-[11px] font-semibold text-red-700" onClick={() => { if (window.confirm(`Eliminar ${p.name}?`)) void removeProduct(p.id).catch((e) => setMsg(String(e?.message ?? e))); }}>Borrar</button></div></div>
+                  <div className="mt-3 flex items-center justify-between rounded-lg bg-card p-2"><span className="text-xs font-semibold text-muted-foreground">Stock</span><div className="inline-flex items-center overflow-hidden rounded-md border border-border bg-background"><button onClick={() => void adjustStock(p, -1)} className="h-9 w-9 border-r border-border text-lg font-bold">−</button><span className="min-w-11 text-center font-bold text-primary">{p.stock}</span><button onClick={() => void adjustStock(p, 1)} className="h-9 w-9 border-l border-border text-lg font-bold">+</button></div></div>
+                </article>)}</div> : null}
+              </div>)}
+            </div>
+            <div className="hidden overflow-x-auto sm:block">
+              <table className="w-full min-w-[560px] text-sm sm:min-w-[700px]">
                 <thead>
                   <tr className="border-b border-border text-left text-neon">
                     <th className="px-2 py-2">Producto</th>
-                    <th className="px-2 py-2">Categoria</th>
+                    <th className="hidden px-2 py-2 sm:table-cell">Categoria</th>
                     <th className="px-2 py-2">Precio</th>
                     <th className="px-2 py-2">Stock</th>
                     <th className="px-2 py-2">Acciones</th>
@@ -595,15 +604,15 @@ function AdminPage() {
                         .map((p) => (
                           <tr key={p.id} className="border-b border-border/60">
                             <td className="px-2 py-3">{p.name}</td>
-                            <td className="px-2 py-3">{p.cat}</td>
+                            <td className="hidden px-2 py-3 sm:table-cell">{p.cat}</td>
                             <td className="px-2 py-3">{formatPrice(p.price)}</td>
                             <td className="px-2 py-3">
                               <div className="inline-flex items-center overflow-hidden rounded-md border border-border bg-background">
-                                <button type="button" title="Restar 10" onClick={() => void adjustStock(p, -10)} className="border-r border-border px-2 py-1.5 text-[10px] font-bold text-red-600 hover:bg-red-50">−10</button>
+                                <button type="button" title="Restar 10" onClick={() => void adjustStock(p, -10)} className="hidden border-r border-border px-2 py-1.5 text-[10px] font-bold text-red-600 hover:bg-red-50 sm:block">−10</button>
                                 <button type="button" title="Restar 1" onClick={() => void adjustStock(p, -1)} className="border-r border-border px-2 py-1.5 text-sm font-bold hover:bg-card">−</button>
                                 <span className="min-w-10 px-2 py-1.5 text-center font-bold text-primary">{p.stock}</span>
                                 <button type="button" title="Sumar 1" onClick={() => void adjustStock(p, 1)} className="border-l border-border px-2 py-1.5 text-sm font-bold hover:bg-card">+</button>
-                                <button type="button" title="Sumar 10" onClick={() => void adjustStock(p, 10)} className="border-l border-border px-2 py-1.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50">+10</button>
+                                <button type="button" title="Sumar 10" onClick={() => void adjustStock(p, 10)} className="hidden border-l border-border px-2 py-1.5 text-[10px] font-bold text-emerald-700 hover:bg-emerald-50 sm:block">+10</button>
                               </div>
                             </td>
                             <td className="px-2 py-3">
@@ -713,7 +722,7 @@ function ProfitRow({ item, onSave }: { item: ProductItem; onSave: (salePrice: nu
   const status = cost <= 0 ? "missing" : profit >= 0 ? "profit" : "loss";
   return <article className={`rounded-xl border bg-white/55 p-3 ${status === "loss" ? "border-red-200" : status === "profit" ? "border-emerald-200" : "border-blue-200"}`}>
     <div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold text-foreground">{item.name}</h3><p className="text-xs text-muted-foreground">{item.cat} · Stock: {item.stock}</p></div><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${status === "missing" ? "bg-blue-100 text-blue-700" : status === "profit" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{status === "missing" ? "Falta costo" : `${margin.toFixed(1)}%`}</span></div>
-    <div className="mt-3 grid grid-cols-2 gap-2"><label className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs font-bold text-red-700">Costo unitario<input type="number" min="0" value={cost || ""} onChange={(event) => setCost(Number(event.target.value))} className="mt-1 w-full rounded-md border border-red-300 bg-white px-2.5 py-2 text-sm font-semibold text-red-800 outline-none focus:border-red-500" /></label><label className="rounded-lg border border-blue-200 bg-blue-50 p-2 text-xs font-bold text-blue-700">Precio de venta<input type="number" min="0" value={sale || ""} onChange={(event) => setSale(Number(event.target.value))} className="mt-1 w-full rounded-md border border-blue-300 bg-white px-2.5 py-2 text-sm font-semibold text-blue-800 outline-none focus:border-blue-500" /></label></div>
+    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"><label className="rounded-lg border border-red-200 bg-red-50 p-2 text-xs font-bold text-red-700">Costo unitario<input type="number" min="0" value={cost || ""} onChange={(event) => setCost(Number(event.target.value))} className="mt-1 w-full rounded-md border border-red-300 bg-white px-2.5 py-2 text-sm font-semibold text-red-800 outline-none focus:border-red-500" /></label><label className="rounded-lg border border-blue-200 bg-blue-50 p-2 text-xs font-bold text-blue-700">Precio de venta<input type="number" min="0" value={sale || ""} onChange={(event) => setSale(Number(event.target.value))} className="mt-1 w-full rounded-md border border-blue-300 bg-white px-2.5 py-2 text-sm font-semibold text-blue-800 outline-none focus:border-blue-500" /></label></div>
     <div className={`mt-3 flex items-center justify-between gap-3 rounded-lg px-3 py-2 ${status === "loss" ? "bg-red-50" : "bg-emerald-50"}`}><div><p className="text-xs text-muted-foreground">Ganancia por unidad</p><p className={`font-bold ${status === "loss" ? "text-red-700" : "text-emerald-700"}`}>{cost > 0 ? formatPrice(profit) : "Cargá el costo"}</p></div><button disabled={busy} onClick={async () => { setBusy(true); try { await onSave(sale, cost); } finally { setBusy(false); } }} className="rounded-md bg-primary px-3 py-2 text-xs font-bold text-white shadow-sm disabled:opacity-60">{busy ? "Guardando…" : "Guardar"}</button></div>
   </article>;
 }
@@ -731,7 +740,7 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
   return (
     <button
       onClick={onClick}
-      className={`border px-4 py-2 text-sm font-bold ${active ? "border-primary bg-primary/25 text-neon" : "border-border bg-card text-foreground"}`}
+      className={`shrink-0 border px-3 py-2 text-sm font-bold sm:px-4 ${active ? "border-primary bg-primary/25 text-neon" : "border-border bg-card text-foreground"}`}
     >
       {children}
     </button>
@@ -756,7 +765,7 @@ function CategoryRow({
 
   return (
     <article className="rounded-lg border border-border bg-background/55 p-3">
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row">
         <img src={draft.img || getCategoryFallback(draft.name)} alt={`Imagen de ${draft.name}`} onError={(event) => { event.currentTarget.src = getCategoryFallback(draft.name); }} className="h-20 w-24 shrink-0 rounded-md border border-border object-cover" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

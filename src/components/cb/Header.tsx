@@ -129,7 +129,7 @@ export function Header({ cart, cartCount, cartTotal, onIncrement, onDecrement, o
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#071632]/95 text-white shadow-sm backdrop-blur-xl">
 
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 md:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-4 md:px-8">
           <a href="/" aria-label="Recargar SDT DROPS y volver al inicio" className="flex shrink-0 items-center gap-2.5">
             <img src={logo} alt="SDT DROPS" width={40} height={40} className="h-10 w-10 object-contain drop-shadow-[0_0_12px_color-mix(in_oklab,var(--neon)_60%,transparent)]" />
             <div className="hidden leading-none sm:block">
@@ -228,8 +228,8 @@ function CartPanel({ cart, cartTotal, onIncrement, onDecrement, onUpdateColor, o
     return acc;
   }, {});
   return (
-    <div className={`${compact ? "relative" : "absolute right-0 top-14"} z-50 w-[min(380px,calc(100vw-24px))] rounded-xl border border-[#C9D1DC] bg-[#F3F5F7] p-5 text-foreground shadow-[0_20px_50px_rgba(7,22,50,.22)]`}>
-      <div className="mb-4 flex items-center justify-between border-b border-[#D7DCE3] pb-4">
+    <div className={`${compact ? "relative" : "fixed inset-x-2 bottom-2 top-[72px] sm:absolute sm:inset-auto sm:right-0 sm:top-14 sm:max-h-[calc(100vh-80px)]"} z-50 w-auto overflow-y-auto rounded-xl border border-[#C9D1DC] bg-[#F3F5F7] p-3 text-foreground shadow-[0_20px_50px_rgba(7,22,50,.22)] sm:w-[min(380px,calc(100vw-24px))] sm:p-5`}>
+      <div className="mb-3 flex items-center justify-between border-b border-[#D7DCE3] pb-3 sm:mb-4 sm:pb-4">
         <h3 className="text-lg font-semibold normal-case tracking-normal text-foreground">Tu carrito</h3>
         {cart.length > 0 && (
           <button onClick={onClear} className="text-xs font-semibold text-muted-foreground transition-colors hover:text-primary">
@@ -242,7 +242,7 @@ function CartPanel({ cart, cartTotal, onIncrement, onDecrement, onUpdateColor, o
       ) : (
         <div className="space-y-3">
           {cart.map((item) => (
-            <div key={lineKey(item)} className="rounded-lg border border-[#D7DCE3] bg-[#E8ECF1] p-4">
+            <div key={lineKey(item)} className="rounded-lg border border-[#D7DCE3] bg-[#E8ECF1] p-3 sm:p-4">
               <div className="flex items-start justify-between gap-2">
                 <p className="pr-2 text-sm font-semibold leading-snug text-foreground">{item.name}</p>
                 <button onClick={() => onRemove(lineKey(item))} className="text-muted-foreground transition-colors hover:text-red-600" aria-label="Eliminar">
