@@ -113,7 +113,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
           onClick={() => onAddToCart(p, selectedColor)}
           className="absolute inset-x-3 bottom-3 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white opacity-100 transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 lg:opacity-0 lg:group-hover:opacity-100"
         >
-          <Plus className="h-4 w-4" /> {disabled ? "Sin stock" : "Anadir al carrito"}
+          <Plus className="h-4 w-4" /> {disabled ? "Sin stock" : "Añadir al carrito"}
         </button>
       </div>
       <div className="flex flex-col gap-1 p-3.5">
