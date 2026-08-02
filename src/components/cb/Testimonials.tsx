@@ -16,7 +16,7 @@ const reviews = [
   {
     name: "Diego Fernandez",
     role: "Cliente frecuente · Cordoba Capital",
-    text: "La atencion por WhatsApp es excelente y los pedidos llegan super rapido.",
+    text: "La atención por WhatsApp es excelente y los pedidos llegan súper rápido.",
     initials: "DF",
   },
 ];

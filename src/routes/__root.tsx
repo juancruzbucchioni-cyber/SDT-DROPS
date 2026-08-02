@@ -16,9 +16,9 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Pagina no encontrada</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Página no encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          La pagina que buscas no existe o fue movida.
+          La página que buscás no existe o fue movida.
         </p>
         <div className="mt-6">
           <Link
@@ -41,10 +41,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          Esta pagina no pudo cargarse
+          Esta página no pudo cargarse
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Ocurrio un error. Podes reintentar o volver al inicio.
+          Ocurrió un error. Podés reintentar o volver al inicio.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -76,15 +76,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "SDT DROPS - Mayorista e importador" },
       { name: "description", content: "SDT DROPS: celulares, perfumes, Stanley, relojes, accesorios, camisetas y productos mayoristas en Cordoba Capital y Villa Maria, Cordoba." },
       { name: "author", content: "SDT DROPS" },
-      { property: "og:title", content: "SDT DROPS - Catalogo mayorista" },
-      { property: "og:description", content: "Productos importados y mayoristas. Atencion en Cordoba Capital y Villa Maria, Cordoba." },
+      { property: "og:title", content: "SDT DROPS - Catálogo mayorista" },
+      { property: "og:description", content: "Productos importados y mayoristas. Atención en Córdoba Capital y Villa María, Córdoba." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://sdtdrops.kazzu.workers.dev/" },
       { property: "og:site_name", content: "SDT DROPS" },
       { property: "og:image", content: `https://sdtdrops.kazzu.workers.dev${favicon}` },
       { property: "og:image:alt", content: "Logo de SDT DROPS" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "SDT DROPS - Catalogo mayorista" },
+      { name: "twitter:title", content: "SDT DROPS - Catálogo mayorista" },
       { name: "twitter:description", content: "Productos importados y mayoristas en Cordoba Capital y Villa Maria." },
       { name: "twitter:image", content: `https://sdtdrops.kazzu.workers.dev${favicon}` },
       { name: "twitter:site", content: "@juan.bucchioni" },

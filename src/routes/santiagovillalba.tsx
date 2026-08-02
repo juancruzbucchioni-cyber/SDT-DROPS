@@ -420,7 +420,7 @@ function AdminPage() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-bold uppercase">Panel administrador</h1>
-          <p className="text-sm text-muted-foreground">Crea y edita productos y categorias conectadas a Supabase.</p>
+          <p className="text-sm text-muted-foreground">Creá y editá productos y categorías conectados a Supabase.</p>
         </div>
         <div className="flex gap-2">
           <button className="border border-border bg-card px-3 py-2 text-xs uppercase" onClick={() => void reload()} disabled={loading}>
@@ -431,14 +431,14 @@ function AdminPage() {
 
       <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4">
         <StatCard title="Productos" value={items.length} />
-        <StatCard title="Categorias" value={categories.length} />
+        <StatCard title="Categorías" value={categories.length} />
         <StatCard title="Stock total" value={totalStock} />
         <StatCard title="Stock bajo" value={lowStock} />
       </div>
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
         <TabBtn active={tab === "productos"} onClick={() => setTab("productos")}>Productos</TabBtn>
-        <TabBtn active={tab === "categorias"} onClick={() => setTab("categorias")}>Categorias</TabBtn>
+        <TabBtn active={tab === "categorias"} onClick={() => setTab("categorias")}>Categorías</TabBtn>
         <TabBtn active={tab === "ganancias"} onClick={() => setTab("ganancias")}>Ganancias</TabBtn>
         <TabBtn active={tab === "estadisticas"} onClick={() => setTab("estadisticas")}>Estadísticas</TabBtn>
       </div>
@@ -453,7 +453,7 @@ function AdminPage() {
             <label className="mt-3 block text-sm font-semibold">Nombre</label>
             <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full border border-border bg-background px-3 py-2" />
 
-            <label className="mt-3 block text-sm font-semibold">Descripcion</label>
+            <label className="mt-3 block text-sm font-semibold">Descripción</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="mt-1 w-full border border-border bg-background px-3 py-2" />
 
             <div className="mt-3 grid gap-2 md:grid-cols-2">
@@ -470,10 +470,10 @@ function AdminPage() {
             <label className="mt-3 block text-sm font-semibold text-emerald-700">Precio USD <span className="font-normal text-muted-foreground">(opcional)</span></label>
             <input type="number" min="0" step="0.01" value={usdPrice} onChange={(e) => setUsdPrice(e.target.value === "" ? "" : Number(e.target.value))} placeholder="Ej: 120" className="mt-1 w-full border border-emerald-400 bg-emerald-50 px-3 py-2 text-emerald-800 outline-none focus:border-emerald-600" />
 
-            <label className="mt-3 block text-sm font-semibold">Categoria</label>
+            <label className="mt-3 block text-sm font-semibold">Categoría</label>
             <select value={cat} onChange={(e) => setCat(e.target.value)} className="mt-1 w-full border border-border bg-background px-3 py-2">
               <option value="" disabled>Seleccionar categoría</option>
-              {categories.slice().sort((a, b) => a.order - b.order).map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}
+              {categories.slice().sort((a, b) => a.order - b.order).map((category) => <option key={category.id} value={category.name}>{category.name.toUpperCase()}</option>)}
             </select>
             {!categories.length ? <p className="mt-1 text-xs text-amber-600">Primero creá una categoría en la pestaña Categorías.</p> : null}
 
@@ -551,7 +551,7 @@ function AdminPage() {
               </label>
               <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} className="h-11 border border-border bg-background px-3 text-sm outline-none focus:border-primary">
                 <option value="">Todas las categorías</option>
-                {categories.slice().sort((a, b) => a.order - b.order).map((category) => <option key={`filter-${category.id}`} value={category.name}>{category.name}</option>)}
+                {categories.slice().sort((a, b) => a.order - b.order).map((category) => <option key={`filter-${category.id}`} value={category.name}>{category.name.toUpperCase()}</option>)}
               </select>
               <select value={stockFilter} onChange={(event) => setStockFilter(event.target.value as typeof stockFilter)} className="h-11 border border-border bg-background px-3 text-sm outline-none focus:border-primary">
                 <option value="all">Todo el stock</option>
@@ -570,7 +570,7 @@ function AdminPage() {
             </div>
             <div className="space-y-3 sm:hidden">
               {groupedAdminItems.map(([categoryName, list]) => <div key={`mobile-${categoryName}`} className="overflow-hidden rounded-lg border border-border bg-background/55">
-                <button onClick={() => toggleCategory(categoryName)} className="flex w-full items-center justify-between bg-primary/10 px-3 py-3 text-left text-xs font-bold uppercase tracking-wide text-primary"><span className="flex items-center gap-2">{collapsedCategories.has(categoryName) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}{categoryName}</span><span>{list.length}</span></button>
+                <button onClick={() => toggleCategory(categoryName)} className="flex w-full items-center justify-between bg-primary/10 px-3 py-3 text-left text-xs font-black uppercase tracking-[0.1em] text-primary"><span className="flex items-center gap-2">{collapsedCategories.has(categoryName) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}{categoryName}</span><span>{list.length}</span></button>
                 {!collapsedCategories.has(categoryName) ? <div className="divide-y divide-border">{list.slice().sort((a, b) => a.name.localeCompare(b.name, "es")).map((p) => <article key={`mobile-product-${p.id}`} className="p-3">
                   <div className="flex items-start justify-between gap-2"><div className="min-w-0"><h3 className="text-sm font-semibold leading-snug">{p.name}</h3><p className="mt-1 text-xs font-bold text-primary">{formatPrice(p.price)}</p></div><div className="flex shrink-0 gap-1"><button className="rounded-md border border-border bg-card px-2 py-1.5 text-[11px] font-semibold" onClick={() => startEdit(p)}>Editar</button><button className="rounded-md border border-red-300 bg-red-50 px-2 py-1.5 text-[11px] font-semibold text-red-700" onClick={() => { if (window.confirm(`Eliminar ${p.name}?`)) void removeProduct(p.id).catch((e) => setMsg(String(e?.message ?? e))); }}>Borrar</button></div></div>
                   <div className="mt-3 flex items-center justify-between rounded-lg bg-card p-2"><span className="text-xs font-semibold text-muted-foreground">Stock</span><div className="inline-flex items-center overflow-hidden rounded-md border border-border bg-background"><button onClick={() => void adjustStock(p, -1)} className="h-9 w-9 border-r border-border text-lg font-bold">−</button><span className="min-w-11 text-center font-bold text-primary">{p.stock}</span><button onClick={() => void adjustStock(p, 1)} className="h-9 w-9 border-l border-border text-lg font-bold">+</button></div></div>
@@ -582,7 +582,7 @@ function AdminPage() {
                 <thead>
                   <tr className="border-b border-border text-left text-neon">
                     <th className="px-2 py-2">Producto</th>
-                    <th className="hidden px-2 py-2 sm:table-cell">Categoria</th>
+                    <th className="hidden px-2 py-2 sm:table-cell">Categoría</th>
                     <th className="px-2 py-2">Precio</th>
                     <th className="px-2 py-2">Stock</th>
                     <th className="px-2 py-2">Acciones</th>
@@ -592,7 +592,7 @@ function AdminPage() {
                   {groupedAdminItems.flatMap(([categoryName, list]) => [
                       <tr key={`sep-${categoryName}`} className="border-y border-primary/30 bg-primary/10">
                         <td colSpan={5}>
-                          <button onClick={() => toggleCategory(categoryName)} aria-expanded={!collapsedCategories.has(categoryName)} className="flex w-full items-center justify-between px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-primary">
+                          <button onClick={() => toggleCategory(categoryName)} aria-expanded={!collapsedCategories.has(categoryName)} className="flex w-full items-center justify-between px-3 py-3 text-left text-xs font-black uppercase tracking-[0.1em] text-primary">
                             <span className="flex items-center gap-2">{collapsedCategories.has(categoryName) ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}{categoryName}</span>
                             <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px]">{list.length}</span>
                           </button>
@@ -604,7 +604,7 @@ function AdminPage() {
                         .map((p) => (
                           <tr key={p.id} className="border-b border-border/60">
                             <td className="px-2 py-3">{p.name}</td>
-                            <td className="hidden px-2 py-3 sm:table-cell">{p.cat}</td>
+                            <td className="hidden px-2 py-3 text-xs font-extrabold uppercase tracking-wide text-primary sm:table-cell">{p.cat}</td>
                             <td className="px-2 py-3">{formatPrice(p.price)}</td>
                             <td className="px-2 py-3">
                               <div className="inline-flex items-center overflow-hidden rounded-md border border-border bg-background">
@@ -660,10 +660,10 @@ function AdminPage() {
                       });
                       if (!res.ok) {
                         const t = await res.text();
-                        throw new Error(`No se pudo guardar categoria: ${t}`);
+                        throw new Error(`No se pudo guardar la categoría: ${t}`);
                       }
                       await reload();
-                      setMsg(`Categoria guardada: ${next.name}`);
+                      setMsg(`Categoría guardada: ${next.name}`);
                     }}
                     onDelete={() => void removeCategory(c).catch((error) => setMsg(`No se pudo eliminar: ${error?.message ?? error}`))}
                   />
@@ -769,7 +769,7 @@ function CategoryRow({
         <img src={draft.img || getCategoryFallback(draft.name)} alt={`Imagen de ${draft.name}`} onError={(event) => { event.currentTarget.src = getCategoryFallback(draft.name); }} className="h-20 w-24 shrink-0 rounded-md border border-border object-cover" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} aria-label="Nombre" className="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-2 text-sm font-semibold" />
+            <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} aria-label="Nombre de la categoría" className="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-2 text-sm font-extrabold uppercase tracking-wide" />
             <label className="shrink-0 text-xs text-muted-foreground">Orden<input type="number" value={draft.order} onChange={(e) => setDraft({ ...draft, order: Number(e.target.value) || 0 })} className="ml-1 w-14 rounded-md border border-border bg-background px-2 py-2 text-center text-sm text-foreground" /></label>
           </div>
           <p className="mt-1 truncate text-[11px] text-muted-foreground">ID: {draft.id}</p>

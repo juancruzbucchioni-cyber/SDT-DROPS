@@ -118,7 +118,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
       </div>
       <div className="flex flex-col gap-1 p-3.5">
         {productImages.length > 1 ? <div className="mb-2 flex gap-2 overflow-x-auto">{productImages.map((image, index) => <button key={`${p.id}-image-${index}`} type="button" onClick={() => setActiveImage(image)} aria-label={`Ver imagen ${index + 1} de ${p.name}`} className={`h-10 w-10 shrink-0 overflow-hidden rounded-md border ${activeImage === image ? "border-primary" : "border-border"}`}><img src={image} alt="" className="h-full w-full object-cover" /></button>)}</div> : null}
-        <span className="text-xs font-medium text-muted-foreground">{p.cat}</span>
+        <span className="text-xs font-extrabold uppercase tracking-[0.1em] text-primary/80">{p.cat}</span>
         <h3 className="text-base font-semibold leading-snug normal-case tracking-normal text-foreground">{p.name}</h3>
         <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Precio unitario</p>
         <div className="flex items-baseline gap-2">
@@ -240,7 +240,7 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="mb-7 flex flex-col justify-between gap-4 sm:mb-10 sm:flex-row sm:items-end sm:gap-5">
           <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Catálogo</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Productos seleccionados</h2></div>
-          <select aria-label="Filtrar por categoría" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-11 w-full rounded-lg border border-[#C5D5ED] bg-[#DCE8FA] px-3 text-sm text-foreground outline-none focus:border-primary sm:w-56"><option value="">Todas las categorías</option>{availableCategories.map((cat) => <option key={cat} value={cat}>{cat}</option>)}</select>
+          <select aria-label="Filtrar por categoría" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-11 w-full rounded-lg border border-[#C5D5ED] bg-[#DCE8FA] px-3 text-sm font-semibold text-foreground outline-none focus:border-primary sm:w-56"><option value="">TODAS LAS CATEGORÍAS</option>{availableCategories.map((cat) => <option key={cat} value={cat}>{cat.toUpperCase()}</option>)}</select>
         </div>
           <div className="space-y-12">
             {sections.slice().sort((a, b) => a.title.localeCompare(b.title, "es", { sensitivity: "base" })).map((section) => {
@@ -248,7 +248,7 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
               if (!list.length) return null;
               return (
                 <div id={section.id} key={section.id} className="scroll-mt-28">
-                  <h3 className="mb-4 text-xl font-semibold normal-case tracking-normal text-foreground">{section.title}</h3>
+                  <h3 className="mb-4 text-xl font-extrabold uppercase tracking-[0.08em] text-foreground">{section.title}</h3>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {list.map((p) => <ProductCard key={p.id} p={p} cartQty={cartQtyById[p.id] ?? 0} onAddToCart={onAddToCart} />)}
                   </div>

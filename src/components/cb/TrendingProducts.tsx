@@ -76,7 +76,7 @@ export function TrendingProducts() {
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="mb-10">
           <div className="font-display text-xs font-semibold uppercase tracking-[0.4em] text-neon">// 03 - Tendencias</div>
-          <h2 className="mt-3 font-display text-4xl font-bold md:text-6xl">Productos <span className="text-neon">mas vendidos</span></h2>
+          <h2 className="mt-3 font-display text-4xl font-bold md:text-6xl">Productos <span className="text-neon">más vendidos</span></h2>
         </div>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((p) => (
@@ -90,7 +90,7 @@ export function TrendingProducts() {
                 }}
                 className="mb-3 aspect-square w-full object-cover"
               />
-              <p className="font-display text-xs uppercase tracking-widest text-muted-foreground">{p.cat}</p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-primary/80">{p.cat}</p>
               <h3 className="mt-1 font-display text-lg font-bold uppercase">{p.name}</h3>
               <p className="mt-2 font-display text-xl font-bold text-neon">{formatPrice(p.price)}</p>
             </a>

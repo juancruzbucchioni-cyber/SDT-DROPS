@@ -40,7 +40,7 @@ export function Categories() {
           {categories.map((category) => (
             <a key={category.id} href={`#${category.id.startsWith("cat-") ? category.id : `cat-${category.id}`}`} className="group overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(17,24,39,.08)]">
               <img src={category.img || fallbackFor(category.name)} alt={category.name} loading="lazy" onError={(event) => { event.currentTarget.src = fallbackFor(category.name); }} className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
-              <div className="flex items-center justify-between gap-2 p-3 sm:p-4"><h3 className="truncate text-sm font-semibold normal-case tracking-normal text-foreground sm:text-base">{category.name}</h3><span className="text-xs font-semibold text-primary sm:text-sm">Ver</span></div>
+              <div className="flex items-center justify-between gap-2 p-3 sm:p-4"><h3 className="truncate text-sm font-extrabold uppercase tracking-[0.08em] text-foreground sm:text-base">{category.name}</h3><span className="text-xs font-semibold text-primary sm:text-sm">Ver</span></div>
             </a>
           ))}
         </div>

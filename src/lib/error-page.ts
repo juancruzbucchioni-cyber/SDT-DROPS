@@ -3,7 +3,7 @@
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <title>La pagina no pudo cargarse</title>
+    <title>La página no pudo cargarse</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       body { font: 15px/1.5 system-ui, -apple-system, sans-serif; background: #fafafa; color: #111; display: grid; place-items: center; min-height: 100vh; margin: 0; padding: 1.5rem; }
@@ -18,8 +18,8 @@
   </head>
   <body>
     <div class="card">
-      <h1>La pagina no pudo cargarse</h1>
-      <p>Ocurrio un error. Podes reintentar o volver al inicio.</p>
+      <h1>La página no pudo cargarse</h1>
+      <p>Ocurrió un error. Podés reintentar o volver al inicio.</p>
       <div class="actions">
         <button class="primary" onclick="location.reload()">Reintentar</button>
         <a class="secondary" href="/">Ir al inicio</a>
