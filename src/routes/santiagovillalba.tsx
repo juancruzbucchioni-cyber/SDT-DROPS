@@ -26,11 +26,13 @@ type ProductItem = {
 };
 
 type CategoryItem = { id: string; name: string; img: string; order: number };
+type OrderRecord = { id: string; createdAt: string; total: number; status?: "pending" | "confirmed" | "rejected"; items: Array<{ name: string; qty: number; price: number }> };
 
 type TabKey = "productos" | "categorias" | "estadisticas" | "ganancias";
 
 const STORAGE_KEY = "sdt_drops_products_v3";
 const ADMIN_SESSION_KEY = "sdt_admin_ok_v1";
+const ORDERS_STORAGE_KEY = "sdt_drops_orders_v1";
 
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? "https://nwshsunoxwmgddtjvaqh.supabase.co";
 const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ?? "sb_publishable_e0Om4SdAs2xpHCLiQXmxzg_48ETZdxA";
@@ -159,10 +161,21 @@ function AdminPage() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryImg, setNewCategoryImg] = useState("");
   const [categoryBusy, setCategoryBusy] = useState(false);
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(ADMIN_SESSION_KEY);
     if (saved === "1") setOk(true);
+  }, []);
+
+  useEffect(() => {
+    const loadOrders = () => {
+      try { const parsed = JSON.parse(window.localStorage.getItem(ORDERS_STORAGE_KEY) ?? "[]"); setOrders(Array.isArray(parsed) ? parsed : []); } catch { setOrders([]); }
+    };
+    loadOrders();
+    window.addEventListener("sdt-order-created", loadOrders as EventListener);
+    window.addEventListener("storage", loadOrders);
+    return () => { window.removeEventListener("sdt-order-created", loadOrders as EventListener); window.removeEventListener("storage", loadOrders); };
   }, []);
 
   async function reload() {
@@ -224,6 +237,16 @@ function AdminPage() {
     if (profitFilter === "high") return cost > 0 && margin >= 30;
     return true;
   }), [filteredAdminItems, profitFilter]);
+  const orderStats = useMemo(() => {
+    const confirmed = orders.filter((order) => order.status === "confirmed");
+    const now = new Date();
+    const monthConfirmed = confirmed.filter((order) => { const date = new Date(order.createdAt); return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear(); });
+    const totalSales = confirmed.reduce((sum, order) => sum + (Number(order.total) || 0), 0);
+    const monthSales = monthConfirmed.reduce((sum, order) => sum + (Number(order.total) || 0), 0);
+    const sold = new Map<string, number>();
+    orders.filter((order) => order.status !== "rejected").forEach((order) => order.items?.forEach((item) => sold.set(item.name, (sold.get(item.name) ?? 0) + (Number(item.qty) || 0))));
+    return { confirmed: confirmed.length, pending: orders.filter((order) => !order.status || order.status === "pending").length, rejected: orders.filter((order) => order.status === "rejected").length, active: orders.filter((order) => order.status !== "rejected").length, totalSales, monthSales, monthOrders: monthConfirmed.length, average: confirmed.length ? totalSales / confirmed.length : 0, topProducts: Array.from(sold.entries()).sort((a, b) => b[1] - a[1]).slice(0, 5) };
+  }, [orders]);
 
   function toggleCategory(category: string) {
     setCollapsedCategories((current) => {
@@ -641,18 +664,20 @@ function AdminPage() {
       ) : null}
 
       {tab === "estadisticas" ? (
-        <section className="rounded-xl border border-border bg-card/65 p-4">
-          <h2 className="text-xl font-semibold">Estadísticas del negocio</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Estimaciones calculadas con el stock, costo y precio de venta.</p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard label="Valor del inventario" value={formatPrice(businessStats.saleValue)} detail="Stock al precio de venta" />
-            <MetricCard label="Costo del inventario" value={formatPrice(businessStats.costValue)} detail="Inversión estimada" />
-            <MetricCard label="Ganancia estimada" value={formatPrice(businessStats.profitValue)} detail="Si se vende todo el stock" accent />
-            <MetricCard label="Costos cargados" value={`${businessStats.withCost} / ${items.length}`} detail="Productos con costo definido" />
-            <MetricCard label="Margen general" value={businessStats.costedSaleValue > 0 ? `${((businessStats.profitValue / businessStats.costedSaleValue) * 100).toFixed(1)}%` : "0%"} detail="Sobre productos con costo" accent />
-            <MetricCard label="Unidades en stock" value={String(totalStock)} detail="En todas las categorías" />
-            <MetricCard label="Stock bajo" value={String(lowStock)} detail="Cinco unidades o menos" />
+        <section className="rounded-xl border border-border bg-card/65 p-4 sm:p-5">
+          <div><p className="text-xs font-bold uppercase tracking-[.18em] text-primary">SDT DROPS</p><h2 className="mt-1 text-2xl font-bold">Administración</h2><p className="mt-1 text-sm text-muted-foreground">Pedidos, productos, categorías y resultados en un solo lugar.</p></div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3"><MetricCard label="Productos" value={String(items.length)} detail="Publicados en la tienda" /><MetricCard label="Pedidos activos" value={String(orderStats.active)} detail="No rechazados" accent /><MetricCard label="Unidades en stock" value={String(totalStock)} detail="Inventario disponible" /></div>
+
+          <h3 className="mt-7 text-lg font-bold">Métricas</h3>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><MetricCard label="Ventas confirmadas" value={formatPrice(orderStats.totalSales)} detail="Total histórico confirmado" accent /><MetricCard label="Ventas del mes" value={formatPrice(orderStats.monthSales)} detail={`${orderStats.monthOrders} pedidos confirmados`} /><MetricCard label="Ticket promedio" value={formatPrice(orderStats.average)} detail="Promedio por pedido confirmado" /><MetricCard label="Stock bajo" value={String(items.filter((product) => product.stock <= 3).length)} detail="Productos con 3 unidades o menos" /></div>
+
+          <div className="mt-6 grid gap-4 xl:grid-cols-[1fr_1.15fr]">
+            <div className="rounded-xl border border-border bg-background/60 p-4"><h3 className="font-bold">Estado de pedidos</h3><div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">{[["Pendiente", orderStats.pending, "border-amber-200 bg-amber-50"], ["Confirmado", orderStats.confirmed, "border-blue-200 bg-blue-50"], ["Preparando", 0, "border-violet-200 bg-violet-50"], ["Enviado", 0, "border-sky-200 bg-sky-50"], ["Entregado", 0, "border-emerald-200 bg-emerald-50"], ["Cancelado", orderStats.rejected, "border-red-200 bg-red-50"]].map(([label, value, color]) => <div key={String(label)} className={`rounded-lg border p-3 ${color}`}><p className="text-xs text-muted-foreground">{label}</p><p className="mt-1 text-xl font-bold">{value}</p></div>)}</div></div>
+            <div className="rounded-xl border border-border bg-background/60 p-4"><h3 className="font-bold">Productos más vendidos</h3><p className="mt-1 text-xs text-muted-foreground">No incluye pedidos rechazados.</p>{orderStats.topProducts.length ? <div className="mt-3 divide-y divide-border">{orderStats.topProducts.map(([name, qty], index) => <div key={name} className="flex items-center justify-between py-2.5 text-sm"><span><strong className="mr-2 text-primary">#{index + 1}</strong>{name}</span><span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-700">{qty} vendidos</span></div>)}</div> : <p className="mt-6 rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Todavía no hay ventas para comparar.</p>}</div>
           </div>
+
+          <h3 className="mt-7 text-lg font-bold">Inventario y rentabilidad</h3>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><MetricCard label="Valor del inventario" value={formatPrice(businessStats.saleValue)} detail="Stock al precio de venta" /><MetricCard label="Costo del inventario" value={formatPrice(businessStats.costValue)} detail="Inversión cargada" /><MetricCard label="Ganancia potencial" value={formatPrice(businessStats.profitValue)} detail="En productos con costo" accent /><MetricCard label="Margen general" value={businessStats.costedSaleValue > 0 ? `${((businessStats.profitValue / businessStats.costedSaleValue) * 100).toFixed(1)}%` : "0%"} detail={`${businessStats.withCost} de ${items.length} costos cargados`} /></div>
         </section>
       ) : null}
 
