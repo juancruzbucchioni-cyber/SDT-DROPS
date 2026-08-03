@@ -9,6 +9,13 @@ export const Route = createFileRoute("/santiagovillalba")({
 
 type TierPrice = { minQty: number; maxQty?: number; unitPrice: number };
 type ColorStock = { color: string; stock: number };
+const SIZE_OPTIONS = ["S", "M", "L", "XL", "XXL"] as const;
+type SizeOption = (typeof SIZE_OPTIONS)[number];
+type SizeStocks = Record<SizeOption, number>;
+
+function createEmptySizeStocks(): SizeStocks {
+  return { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
+}
 
 type ProductItem = {
   id: string;
@@ -151,8 +158,14 @@ function AdminPage() {
   const [cat, setCat] = useState("Mayorista");
   const [imgUrl, setImgUrl] = useState("");
   const [colorsInput, setColorsInput] = useState("");
+  const [hasSizes, setHasSizes] = useState(false);
+  const [sizeStocks, setSizeStocks] = useState<SizeStocks>(createEmptySizeStocks);
   const [tierRows, setTierRows] = useState<TierPrice[]>([]);
   const [extraImages, setExtraImages] = useState("");
+  const sizeStockTotal = SIZE_OPTIONS.reduce(
+    (total, size) => total + (Number(sizeStocks[size]) || 0),
+    0,
+  );
   const [uploading, setUploading] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -333,6 +346,8 @@ function AdminPage() {
     setCat(categories[0]?.name ?? "Mayorista");
     setImgUrl("");
     setColorsInput("");
+    setHasSizes(false);
+    setSizeStocks(createEmptySizeStocks());
     setTierRows([]);
     setExtraImages("");
   }
@@ -344,6 +359,13 @@ function AdminPage() {
     }
 
     const id = editingId || `${slugify(name)}-${Date.now()}`;
+    const variants = hasSizes
+      ? SIZE_OPTIONS.map((size) => ({
+          color: size,
+          stock: Math.max(0, Number(sizeStocks[size]) || 0),
+        })).filter((variant) => variant.stock > 0)
+      : parseColorsSimple(colorsInput);
+
     const payload = {
       id,
       name: name.trim(),
@@ -353,9 +375,9 @@ function AdminPage() {
       price: Number(price) || 0,
       old: null,
       tag: "",
-      stock: Number(stock) || 0,
+      stock: hasSizes ? sizeStockTotal : Math.max(0, Number(stock) || 0),
       compatible_models: ["Universal", ...(Number(usdPrice) > 0 ? [`USD:${Number(usdPrice)}`] : [])],
-      colors: parseColorsSimple(colorsInput),
+      colors: variants,
       tier_prices: tierRows.filter((tier) => tier.minQty > 0 && tier.unitPrice > 0).map((tier) => ({ minQty: Number(tier.minQty), ...(Number(tier.maxQty) > 0 ? { maxQty: Number(tier.maxQty) } : {}), unitPrice: Number(tier.unitPrice) })),
     };
 
@@ -451,7 +473,22 @@ function AdminPage() {
     setCat(p.cat ?? "Mayorista");
     const productImages = String(p.img ?? "").split(/\r?\n/).map((url) => url.trim()).filter(Boolean);
     setImgUrl(productImages[0] ?? "");
-    setColorsInput((p.colors ?? []).map((c) => c.color).join(", "));
+    const productVariants = p.colors ?? [];
+    const usesSizes =
+      productVariants.length > 0 &&
+      productVariants.every((variant) =>
+        SIZE_OPTIONS.includes(variant.color.trim().toUpperCase() as SizeOption),
+      );
+    const nextSizeStocks = createEmptySizeStocks();
+    if (usesSizes) {
+      productVariants.forEach((variant) => {
+        const size = variant.color.trim().toUpperCase() as SizeOption;
+        nextSizeStocks[size] = Math.max(0, Number(variant.stock) || 0);
+      });
+    }
+    setHasSizes(usesSizes);
+    setSizeStocks(nextSizeStocks);
+    setColorsInput(usesSizes ? "" : productVariants.map((c) => c.color).join(", "));
     setTierRows((p.tierPrices ?? []).map((tier) => ({ ...tier })));
     setExtraImages(productImages.slice(1).join("\n"));
     setTab("productos");
@@ -532,11 +569,64 @@ function AdminPage() {
                 <label className="block text-sm font-semibold">Precio ARS</label>
                 <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="mt-1 w-full border border-border bg-background px-3 py-2" />
               </div>
-              <div>
-                <label className="block text-sm font-semibold">Stock</label>
-                <input type="number" value={stock} onChange={(e) => setStock(Number(e.target.value))} className="mt-1 w-full border border-border bg-background px-3 py-2" />
-              </div>
-            </div>
+  <div>
+    <label className="block text-sm font-semibold">Stock total</label>
+    <input
+      type="number"
+      min="0"
+      value={hasSizes ? sizeStockTotal : stock}
+      onChange={(e) => setStock(Number(e.target.value))}
+      readOnly={hasSizes}
+      className={`mt-1 w-full border border-border px-3 py-2 ${hasSizes ? "bg-muted text-muted-foreground" : "bg-background"}`}
+    />
+  </div>
+</div>
+
+<div className="mt-3 rounded-lg border border-border bg-background/60 p-3">
+  <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold">
+    <input
+      type="checkbox"
+      checked={hasSizes}
+      onChange={(e) => {
+        const checked = e.target.checked;
+        setHasSizes(checked);
+        if (!checked) setSizeStocks(createEmptySizeStocks());
+      }}
+      className="h-4 w-4 accent-blue-600"
+    />
+    Este producto tiene talles
+    <span className="font-normal text-muted-foreground">(opcional)</span>
+  </label>
+  {hasSizes && (
+    <>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Cargá el stock disponible de cada talle. El total se calcula automáticamente.
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {SIZE_OPTIONS.map((size) => (
+          <label key={size} className="text-xs font-semibold text-muted-foreground">
+            {size}
+            <input
+              type="number"
+              min="0"
+              value={sizeStocks[size]}
+              onChange={(e) =>
+                setSizeStocks((current) => ({
+                  ...current,
+                  [size]: Math.max(0, Number(e.target.value) || 0),
+                }))
+              }
+              className="mt-1 w-full border border-border bg-background px-3 py-2 text-foreground"
+            />
+          </label>
+        ))}
+      </div>
+      <div className="mt-2 text-right text-xs font-semibold text-blue-700">
+        Stock total: {sizeStockTotal}
+      </div>
+    </>
+  )}
+</div>
 
             <label className="mt-3 block text-sm font-semibold text-emerald-700">Precio USD <span className="font-normal text-muted-foreground">(opcional)</span></label>
             <input type="number" min="0" step="0.01" value={usdPrice} onChange={(e) => setUsdPrice(e.target.value === "" ? "" : Number(e.target.value))} placeholder="Ej: 120" className="mt-1 w-full border border-emerald-400 bg-emerald-50 px-3 py-2 text-emerald-800 outline-none focus:border-emerald-600" />
@@ -578,8 +668,12 @@ function AdminPage() {
             <label className="mt-3 block text-sm font-semibold">Imagen principal</label>
             <input value={imgUrl} onChange={(e) => setImgUrl(e.target.value)} className="mt-1 w-full border border-border bg-background px-3 py-2" />
 
-            <label className="mt-3 block text-sm font-semibold">Colores separados por coma</label>
-            <input value={colorsInput} onChange={(e) => setColorsInput(e.target.value)} placeholder="Negro, Blanco, Gris" className="mt-1 w-full border border-border bg-background px-3 py-2" />
+{!hasSizes && (
+  <>
+    <label className="mt-3 block text-sm font-semibold">Colores separados por coma</label>
+    <input value={colorsInput} onChange={(e) => setColorsInput(e.target.value)} placeholder="Negro, Blanco, Gris" className="mt-1 w-full border border-border bg-background px-3 py-2" />
+  </>
+)}
 
             <div className="mt-4 rounded-lg border border-border bg-background/60 p-3">
               <div className="flex items-start justify-between gap-3">

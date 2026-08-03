@@ -61,6 +61,8 @@ function resolveImageSources(src?: string) {
   return values.length ? values : [fallbackProductImage];
 }
 
+const SIZE_VARIANTS = new Set(["S", "M", "L", "XL", "XXL"]);
+
 export function getUnitPrice(product: ProductItem, qty: number) {
   const tiers = (product.tierPrices ?? []).slice().sort((a, b) => a.minQty - b.minQty);
   for (const tier of tiers) {
@@ -87,6 +89,11 @@ function getUsdPrice(product: ProductItem) {
 }
 
 function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: number; onAddToCart: (product: ProductItem, color?: string) => void }) {
+  const isCamiseta = p.cat.trim().toLocaleLowerCase("es") === "camisetas";
+  const hasSizeVariants = Boolean(
+    p.colors?.length &&
+      p.colors.every((variant) => SIZE_VARIANTS.has(variant.color.trim().toUpperCase())),
+  );
   const productImages = resolveImageSources(p.img);
   const [activeImage, setActiveImage] = useState(productImages[0]);
   const [selectedColor, setSelectedColor] = useState<string | undefined>(p.colors?.[0]?.color);
@@ -120,10 +127,26 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
         {productImages.length > 1 ? <div className="mb-2 flex gap-2 overflow-x-auto">{productImages.map((image, index) => <button key={`${p.id}-image-${index}`} type="button" onClick={() => setActiveImage(image)} aria-label={`Ver imagen ${index + 1} de ${p.name}`} className={`h-10 w-10 shrink-0 overflow-hidden rounded-md border ${activeImage === image ? "border-primary" : "border-border"}`}><img src={image} alt="" className="h-full w-full object-cover" /></button>)}</div> : null}
         <span className="text-xs font-extrabold uppercase tracking-[0.1em] text-primary/80">{p.cat}</span>
         <h3 className="text-base font-semibold leading-snug normal-case tracking-normal text-foreground">{p.name}</h3>
+        {p.description?.trim() ? (
+          <p
+            className="mt-1 text-sm leading-5 text-muted-foreground"
+            style={{
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 2,
+              overflow: "hidden",
+            }}
+            title={p.description.trim()}
+          >
+            {p.description.trim()}
+          </p>
+        ) : null}
         <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Precio unitario</p>
         <div className="flex items-baseline gap-2">
           <span className="text-xl font-bold tracking-tight text-foreground">{formatPrice(p.price)}</span>
-          {p.old && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.old)}</span>}
+          {typeof p.old === "number" && p.old > 0 ? (
+            <span className="text-sm text-muted-foreground line-through">{formatPrice(p.old)}</span>
+          ) : null}
         </div>
         {usdPrice ? <p className="text-sm font-bold text-emerald-700">💵 USD {new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(usdPrice)}</p> : null}
         {tiers.length ? <div className="mt-2 overflow-hidden rounded-lg border border-[#AFC9F2] bg-[#E7F0FE]">
@@ -133,18 +156,29 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
             <span className="shrink-0 font-bold text-[#0B5ED7]">{formatPrice(tier.unitPrice)} c/u</span>
           </div>)}</div>
         </div> : null}
-        {p.colors?.length ? (
+        {p.colors?.length && (!isCamiseta || hasSizeVariants) ? (
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Colores</span>
+            <span className="text-xs text-muted-foreground">{hasSizeVariants ? "Talles" : "Colores"}</span>
             <div className="flex flex-wrap gap-1.5">
               {p.colors.map((c, idx) => (
                 <button
                   type="button"
                   key={`${p.id}-color-${idx}`}
                   onClick={() => setSelectedColor(c.color)}
-                  className={`inline-flex items-center gap-1 rounded-full border p-1 ${selectedColor === c.color ? "border-primary" : "border-border"}`}
+                  aria-label={`Seleccionar ${hasSizeVariants ? "talle" : "color"} ${c.color}`}
+                  className={`inline-flex min-h-7 items-center justify-center border text-xs font-bold transition ${
+                    hasSizeVariants ? "rounded-md px-2 py-1" : "rounded-full p-1"
+                  } ${
+                    selectedColor === c.color
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-background text-foreground"
+                  }`}
                 >
-                  <span title={c.color} className="h-3.5 w-3.5 rounded-full border border-border" style={{ backgroundColor: resolveColorCss(c.color) }} />
+                  {hasSizeVariants ? (
+                    c.color.toUpperCase()
+                  ) : (
+                    <span title={c.color} className="h-3.5 w-3.5 rounded-full border border-border" style={{ backgroundColor: resolveColorCss(c.color) }} />
+                  )}
                 </button>
               ))}
             </div>

@@ -1,5 +1,17 @@
 import logo from "@/assets/logo.png";
 
+const supportLinks = [
+  {
+    label: "Cambios",
+    href: `https://wa.me/5493534814420?text=${encodeURIComponent("Hola, quiero consultar por un cambio.")}`,
+  },
+  {
+    label: "Envíos",
+    href: `https://wa.me/5493534814420?text=${encodeURIComponent("Hola, quiero consultar por un envío.")}`,
+  },
+  { label: "Garantía", href: "#contacto" },
+];
+
 export function Footer() {
   return (
     <footer className="border-t border-border bg-background">
@@ -26,10 +38,14 @@ export function Footer() {
         <div>
           <h4 className="font-display text-sm font-bold uppercase tracking-widest text-foreground">Soporte</h4>
           <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-            {["Cambios", "Envíos", "Garantía", "Preguntas frecuentes", "Contacto"].map((x) => (
-              <li key={x}>
-                <a href="#contacto" className="hover:text-neon">
-                  {x}
+            {supportLinks.map((link) => (
+              <li key={link.label}>
+                <a
+                  href={link.href}
+                  className="hover:text-neon"
+                  {...(link.href.startsWith("https://") ? { target: "_blank", rel: "noreferrer" } : {})}
+                >
+                  {link.label}
                 </a>
               </li>
             ))}
