@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, Plus, Search, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, FileSpreadsheet, Plus, Search, Trash2 } from "lucide-react";
 import { defaultCategories } from "@/components/cb/catalog-config";
 
 export const Route = createFileRoute("/santiagovillalba")({
@@ -139,6 +139,7 @@ function AdminPage() {
   const [items, setItems] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [msg, setMsg] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -254,6 +255,72 @@ function AdminPage() {
       if (next.has(category)) next.delete(category); else next.add(category);
       return next;
     });
+  }
+
+  async function exportProductsToExcel() {
+    if (!items.length) {
+      setMsg("No hay productos para exportar.");
+      return;
+    }
+
+    setExporting(true);
+    setMsg("");
+    try {
+      const XLSX = await import("xlsx");
+      const rows = items.map((product) => {
+        const images = product.img.split(/\r?\n/).map((value) => value.trim()).filter(Boolean);
+        const usdMarker = (product.compatibleModels ?? []).find((value) => value.startsWith("USD:"));
+        const usdPrice = usdMarker ? Number(usdMarker.replace("USD:", "")) : 0;
+        const cost = getCostPrice(product);
+        const profit = cost > 0 ? product.price - cost : null;
+        const margin = profit !== null && product.price > 0 ? (profit / product.price) * 100 : null;
+        const models = (product.compatibleModels ?? []).filter((value) => !value.startsWith("USD:") && !value.startsWith("COST:"));
+        const tierPrices = (product.tierPrices ?? []).map((tier) => {
+          const quantity = tier.maxQty ? `${tier.minQty}-${tier.maxQty} u.` : `+${tier.minQty} u.`;
+          return `${quantity}: ARS ${tier.unitPrice} c/u`;
+        });
+
+        return {
+          ID: product.id,
+          Nombre: product.name,
+          "Descripción": product.description ?? "",
+          "Categoría": product.cat,
+          "Precio ARS": product.price,
+          "Precio anterior ARS": product.old ?? "",
+          "Precio USD": usdPrice > 0 ? usdPrice : "",
+          "Costo unitario ARS": cost > 0 ? cost : "",
+          "Ganancia unitaria ARS": profit ?? "",
+          "Margen %": margin !== null ? Number(margin.toFixed(2)) : "",
+          "Stock total": product.stock,
+          Colores: (product.colors ?? []).map((item) => item.color).join(", "),
+          "Stock por color": (product.colors ?? []).map((item) => `${item.color}: ${item.stock}`).join(" | "),
+          "Precios por cantidad": tierPrices.join(" | "),
+          Etiqueta: product.tag ?? "",
+          "Imagen principal": images[0] ?? "",
+          "Imágenes adicionales": images.slice(1).join(" | "),
+          "Modelos compatibles": models.join(", "),
+        };
+      });
+
+      const sheet = XLSX.utils.json_to_sheet(rows);
+      sheet["!cols"] = [
+        { wch: 20 }, { wch: 34 }, { wch: 50 }, { wch: 20 },
+        { wch: 14 }, { wch: 18 }, { wch: 14 }, { wch: 19 },
+        { wch: 22 }, { wch: 12 }, { wch: 13 }, { wch: 28 },
+        { wch: 36 }, { wch: 52 }, { wch: 16 }, { wch: 55 },
+        { wch: 60 }, { wch: 40 },
+      ];
+      sheet["!autofilter"] = { ref: sheet["!ref"] ?? `A1:R${rows.length + 1}` };
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, sheet, "Productos");
+      const date = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(workbook, `productos-sdt-drops-${date}.xlsx`);
+      setMsg(`Excel exportado correctamente: ${rows.length} productos.`);
+    } catch (error: any) {
+      setMsg(error?.message ?? "No se pudo exportar el Excel.");
+    } finally {
+      setExporting(false);
+    }
   }
 
   function clearForm() {
@@ -422,7 +489,11 @@ function AdminPage() {
           <h1 className="font-display text-3xl font-bold uppercase">Panel administrador</h1>
           <p className="text-sm text-muted-foreground">Creá y editá productos y categorías conectados a Supabase.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <button className="inline-flex items-center gap-2 border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-semibold uppercase text-emerald-700 disabled:opacity-60" onClick={() => void exportProductsToExcel()} disabled={exporting || loading}>
+            <FileSpreadsheet size={16} />
+            {exporting ? "Exportando..." : "Exportar Excel"}
+          </button>
           <button className="border border-border bg-card px-3 py-2 text-xs uppercase" onClick={() => void reload()} disabled={loading}>
             {loading ? "Actualizando..." : "Actualizar"}
           </button>
