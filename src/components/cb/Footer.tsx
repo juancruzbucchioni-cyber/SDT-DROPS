@@ -1,4 +1,5 @@
 import logo from "@/assets/logo.png";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 const supportLinks = [
   {
@@ -13,9 +14,11 @@ const supportLinks = [
 ];
 
 export function Footer() {
+  const footerRef = useScrollReveal();
+
   return (
-    <footer className="border-t border-border bg-background">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 py-10 sm:py-16 md:grid-cols-4 md:px-8">
+    <footer ref={footerRef} className="border-t border-border bg-background">
+      <div className="reveal mx-auto grid max-w-7xl grid-cols-2 gap-8 px-4 py-10 sm:py-16 md:grid-cols-4 md:px-8">
         <div className="col-span-2">
           <img src={logo} alt="SDT DROPS" width={64} height={64} className="h-14 w-auto object-contain drop-shadow-[0_0_18px_color-mix(in_oklab,var(--neon)_55%,transparent)]" />
           <p className="mt-4 max-w-sm text-sm text-muted-foreground">

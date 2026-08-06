@@ -1,4 +1,5 @@
 import { Instagram, MapPin, Phone, type LucideIcon } from "lucide-react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 type ContactItem = {
   Icon: LucideIcon;
@@ -14,7 +15,7 @@ const contactItems: ContactItem[] = [
   { Icon: Instagram, label: "@santi.villalbaa_", detail: "Novedades, ingresos y consultas", href: "https://instagram.com/santi.villalbaa_" },
 ];
 
-function ContactCard({ item }: { item: ContactItem }) {
+function ContactCard({ item, index }: { item: ContactItem; index: number }) {
   const content = (
     <>
       <div className="grid h-10 w-10 flex-none place-items-center rounded-lg border border-primary/40 bg-background text-primary"><item.Icon className="h-4 w-4" /></div>
@@ -22,19 +23,27 @@ function ContactCard({ item }: { item: ContactItem }) {
     </>
   );
 
-  const className = "flex items-start gap-3 rounded-xl border border-border bg-card/60 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_10px_24px_rgba(17,54,112,.08)]";
+  const className = `reveal stagger-${index + 1} flex items-start gap-3 rounded-xl border border-border bg-card/60 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-[0_10px_24px_rgba(17,54,112,.08)]`;
   return item.href ? <a href={item.href} target="_blank" rel="noreferrer" className={className}>{content}</a> : <div className={className}>{content}</div>;
 }
 
 export function Contact() {
+  const sectionRef = useScrollReveal();
+
   return (
-    <section id="contacto" className="relative overflow-hidden border-b border-border py-12 sm:py-24">
+    <section id="contacto" ref={sectionRef} className="relative overflow-hidden border-b border-border py-12 sm:py-24">
       <div className="relative mx-auto max-w-7xl px-4 md:px-8">
         <div className="max-w-4xl">
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Contacto</div>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">Hablá con <span className="text-primary">SDT DROPS</span></h2>
-          <p className="mt-4 max-w-md text-muted-foreground">Atención rápida y personalizada. Te ayudamos a elegir el producto ideal para vos o para tu negocio.</p>
-          <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2">{contactItems.map((item) => <ContactCard key={item.label} item={item} />)}</div>
+          <div className="reveal">
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Contacto</div>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">Hablá con <span className="text-primary">SDT DROPS</span></h2>
+            <p className="mt-4 max-w-md text-muted-foreground">Atención rápida y personalizada. Te ayudamos a elegir el producto ideal para vos o para tu negocio.</p>
+          </div>
+          <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2">
+            {contactItems.map((item, index) => (
+              <ContactCard key={item.label} item={item} index={index} />
+            ))}
+          </div>
         </div>
       </div>
     </section>

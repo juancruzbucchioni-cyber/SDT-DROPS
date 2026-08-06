@@ -1,4 +1,4 @@
-﻿import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -79,15 +79,37 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "SDT DROPS - Catálogo mayorista" },
       { property: "og:description", content: "Productos importados y mayoristas. Atención en Córdoba Capital y Villa María, Córdoba." },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://sdtdrops.kazzu.workers.dev/" },
+      { property: "og:url", content: "https://sdtdrops.com/" },
       { property: "og:site_name", content: "SDT DROPS" },
-      { property: "og:image", content: `https://sdtdrops.kazzu.workers.dev${favicon}` },
+      { property: "og:image", content: `https://sdtdrops.com${favicon}` },
       { property: "og:image:alt", content: "Logo de SDT DROPS" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "SDT DROPS - Catálogo mayorista" },
       { name: "twitter:description", content: "Productos importados y mayoristas en Cordoba Capital y Villa Maria." },
-      { name: "twitter:image", content: `https://sdtdrops.kazzu.workers.dev${favicon}` },
-      { name: "twitter:site", content: "@juan.bucchioni" },
+      { name: "twitter:image", content: `https://sdtdrops.com${favicon}` },
+      { name: "twitter:site", content: "@santi.villalbaa_" },
+    ],
+    scripts: [
+      {
+        tag: "script",
+        attrs: { type: "application/ld+json" },
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Store",
+          name: "SDT DROPS",
+          description: "Mayorista e importador de celulares, perfumes, Stanley, relojes, accesorios y camisetas.",
+          url: "https://sdtdrops.com",
+          telephone: "+5493534814420",
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Córdoba",
+            addressRegion: "Córdoba",
+            addressCountry: "AR",
+          },
+          sameAs: ["https://instagram.com/santi.villalbaa_"],
+          priceRange: "$$",
+        }),
+      },
     ],
     links: [
       { rel: "icon", type: "image/png", href: favicon },

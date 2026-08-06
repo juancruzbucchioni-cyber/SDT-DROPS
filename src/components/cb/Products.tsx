@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import fallbackProductImage from "@/assets/productos/todos.png";
 import { Plus } from "lucide-react";
 import { isCloudSyncEnabled } from "@/lib/cloud-sync";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 export type ProductItem = {
   id: string;
@@ -103,7 +104,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   const tiers = (p.tierPrices ?? []).slice().sort((a, b) => a.minQty - b.minQty);
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-xl border border-[#D7DCE3] bg-[#F3F5F7] transition-shadow hover:shadow-[0_12px_30px_rgba(17,24,39,.08)]">
+    <article className="product-card-enhanced group relative flex flex-col overflow-hidden rounded-xl border border-[#D7DCE3] bg-[#F3F5F7]">
       <div className="relative aspect-square overflow-hidden bg-[#E8EBEF]">
         <img
           src={activeImage}
@@ -118,7 +119,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
         <button
           disabled={disabled}
           onClick={() => onAddToCart(p, selectedColor)}
-          className="absolute inset-x-3 bottom-3 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white opacity-100 transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 lg:opacity-0 lg:group-hover:opacity-100"
+          className="absolute inset-x-3 bottom-3 cta-enhanced inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-white opacity-100 transition-all hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60 lg:opacity-0 lg:group-hover:opacity-100"
         >
           <Plus className="h-4 w-4" /> {disabled ? "Sin stock" : "Añadir al carrito"}
         </button>
@@ -266,14 +267,41 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
   }, [products, selectedCategory, searchTerm]);
 
   if (!isHydrated || !isSyncReady) {
-    return <section id="productos" className="border-b border-border bg-[#ECEFF3] py-20"><div className="mx-auto max-w-7xl px-4 text-sm text-muted-foreground md:px-8">Cargando productos…</div></section>;
+    return (
+      <section id="productos" className="border-b border-border bg-[#ECEFF3] py-20">
+        <div className="mx-auto max-w-7xl px-4 md:px-8">
+          <div className="mb-7 sm:mb-10">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Catálogo</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Productos seleccionados</h2>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={`skel-${i}`} className="flex flex-col overflow-hidden rounded-xl border border-[#D7DCE3] bg-[#F3F5F7]">
+                <div className="skeleton aspect-square" />
+                <div className="space-y-3 p-4">
+                  <div className="skeleton h-3 w-20" />
+                  <div className="skeleton h-5 w-3/4" />
+                  <div className="skeleton h-4 w-full" />
+                  <div className="skeleton h-7 w-28" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
   }
 
+  const sectionRef = useScrollReveal();
+
   return (
-    <section id="productos" className="border-y border-border bg-[#ECEFF3] py-12 sm:py-20">
+    <section id="productos" ref={sectionRef} className="border-y border-border bg-[#ECEFF3] py-12 sm:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="mb-7 flex flex-col justify-between gap-4 sm:mb-10 sm:flex-row sm:items-end sm:gap-5">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Catálogo</p><h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Productos seleccionados</h2></div>
+          <div className="reveal">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Catálogo</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">Productos seleccionados</h2>
+          </div>
           <select aria-label="Filtrar por categoría" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="h-11 w-full rounded-lg border border-[#C5D5ED] bg-[#DCE8FA] px-3 text-sm font-semibold text-foreground outline-none focus:border-primary sm:w-56"><option value="">TODAS LAS CATEGORÍAS</option>{availableCategories.map((cat) => <option key={cat} value={cat}>{cat.toUpperCase()}</option>)}</select>
         </div>
           <div className="space-y-12">

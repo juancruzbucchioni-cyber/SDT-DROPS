@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/cb/Header";
 import { Hero } from "@/components/cb/Hero";
@@ -8,6 +8,8 @@ import { Footer } from "@/components/cb/Footer";
 import { Categories } from "@/components/cb/Categories";
 import { CatalogCta, TrustSection } from "@/components/cb/CommerceSections";
 import { initializeCloudSync } from "@/lib/cloud-sync";
+import { useToast, ToastContainer } from "@/components/cb/Toast";
+import { ArrowUp, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -20,6 +22,14 @@ const cartKey = (id: string, selectedColor?: string) => `${id}::${selectedColor 
 function Index() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartHydrated, setCartHydrated] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const { toasts, show: showToast } = useToast();
+
+  useEffect(() => {
+    const onScroll = () => setShowBackToTop(window.scrollY > 600);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     void initializeCloudSync().then(() => {
@@ -45,7 +55,7 @@ function Index() {
     }
   }, [cart, cartHydrated]);
 
-  const addToCart = (product: ProductItem, selectedColor?: string) => {
+  const addToCart = useCallback((product: ProductItem, selectedColor?: string) => {
     setCart((prev) => {
       const found = prev.find((i) => cartKey(i.id, i.selectedColor) === cartKey(product.id, selectedColor));
       if (found) {
@@ -58,7 +68,8 @@ function Index() {
       if (product.stock <= 0) return prev;
       return [...prev, { ...product, qty: 1, selectedColor }];
     });
-  };
+    showToast(`${product.name} agregado al carrito`);
+  }, [showToast]);
 
   const increment = (key: string) => {
     setCart((prev) =>
@@ -128,6 +139,31 @@ function Index() {
       <CatalogCta />
       <Contact />
       <Footer />
+
+      {/* WhatsApp floating button */}
+      <a
+        href="https://wa.me/5493534814420"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Contactanos por WhatsApp"
+        className="whatsapp-float fixed bottom-5 right-5 z-50 grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-lg sm:bottom-6 sm:right-6"
+      >
+        <MessageCircle className="h-6 w-6" fill="white" strokeWidth={0} />
+      </a>
+
+      {/* Back to top button */}
+      {showBackToTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          aria-label="Volver arriba"
+          className="back-to-top fixed bottom-24 right-5 z-50 grid h-11 w-11 place-items-center rounded-full border border-[#C9D1DC] bg-[#F3F5F7] text-foreground shadow-md sm:bottom-24 sm:right-6"
+        >
+          <ArrowUp className="h-4 w-4" />
+        </button>
+      )}
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} />
     </main>
   );
 }
