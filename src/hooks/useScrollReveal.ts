@@ -8,6 +8,7 @@ export function useScrollReveal(rootMargin = "-60px") {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined" || !("IntersectionObserver" in window)) return;
     const container = containerRef.current;
     if (!container) return;
 

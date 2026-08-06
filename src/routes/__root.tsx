@@ -89,28 +89,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: `https://sdtdrops.com${favicon}` },
       { name: "twitter:site", content: "@santi.villalbaa_" },
     ],
-    scripts: [
-      {
-        tag: "script",
-        attrs: { type: "application/ld+json" },
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Store",
-          name: "SDT DROPS",
-          description: "Mayorista e importador de celulares, perfumes, Stanley, relojes, accesorios y camisetas.",
-          url: "https://sdtdrops.com",
-          telephone: "+5493534814420",
-          address: {
-            "@type": "PostalAddress",
-            addressLocality: "Córdoba",
-            addressRegion: "Córdoba",
-            addressCountry: "AR",
-          },
-          sameAs: ["https://instagram.com/santi.villalbaa_"],
-          priceRange: "$$",
-        }),
-      },
-    ],
     links: [
       { rel: "icon", type: "image/png", href: favicon },
       { rel: "shortcut icon", type: "image/png", href: favicon },
@@ -133,11 +111,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+const jsonLdData = {
+  "@context": "https://schema.org",
+  "@type": "Store",
+  name: "SDT DROPS",
+  description: "Mayorista e importador de celulares, perfumes, Stanley, relojes, accesorios y camisetas.",
+  url: "https://sdtdrops.com",
+  telephone: "+5493534814420",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Córdoba",
+    addressRegion: "Córdoba",
+    addressCountry: "AR",
+  },
+  sameAs: ["https://instagram.com/santi.villalbaa_"],
+  priceRange: "$$",
+};
+
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
       <head>
         <HeadContent />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
+        />
       </head>
       <body>
         {children}

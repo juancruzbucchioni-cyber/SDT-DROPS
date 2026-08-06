@@ -201,6 +201,7 @@ const sections = [
 ];
 
 export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: ProductItem, color?: string) => void; cartQtyById: Record<string, number> }) {
+  const sectionRef = useScrollReveal();
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -292,7 +293,7 @@ export function Products({ onAddToCart, cartQtyById }: { onAddToCart: (product: 
     );
   }
 
-  const sectionRef = useScrollReveal();
+
 
   return (
     <section id="productos" ref={sectionRef} className="border-y border-border bg-[#ECEFF3] py-12 sm:py-20">
