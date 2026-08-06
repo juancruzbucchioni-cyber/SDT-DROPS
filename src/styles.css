@@ -182,18 +182,38 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(45px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes blinkCursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 0.85em;
+  margin-left: 2px;
+  background-color: var(--primary);
+  vertical-align: baseline;
+  animation: blinkCursor 0.8s step-end infinite;
+}
+
 /* ─── NEW: Hero entry animations ─── */
-.hero-animate-kicker { animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
-.hero-animate-title { animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both; }
-.hero-animate-subtitle { animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both; }
-.hero-animate-buttons { animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both; }
-.hero-animate-image { animation: scaleIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both; }
+.hero-animate-kicker { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.hero-animate-title { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+.hero-animate-subtitle { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
+.hero-animate-buttons { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+.hero-animate-image { animation: slideInRight 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
 
 /* ─── NEW: Scroll reveal ─── */
 .reveal {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateY(18px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .reveal.revealed {
   opacity: 1;
@@ -201,12 +221,30 @@
 }
 .reveal-scale {
   opacity: 0;
-  transform: scale(0.95);
-  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: scale(0.97);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .reveal-scale.revealed {
   opacity: 1;
   transform: scale(1);
+}
+.reveal-side-right {
+  opacity: 0;
+  transform: translateX(35px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-side-right.revealed {
+  opacity: 1;
+  transform: translateX(0);
+}
+.reveal-side-left {
+  opacity: 0;
+  transform: translateX(-35px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-side-left.revealed {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* Stagger delay classes */

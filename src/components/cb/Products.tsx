@@ -104,7 +104,7 @@ function ProductCard({ p, cartQty, onAddToCart }: { p: ProductItem; cartQty: num
   const tiers = (p.tierPrices ?? []).slice().sort((a, b) => a.minQty - b.minQty);
 
   return (
-    <article className="product-card-enhanced group relative flex flex-col overflow-hidden rounded-xl border border-[#D7DCE3] bg-[#F3F5F7]">
+    <article className="product-card-enhanced reveal-side-right group relative flex flex-col overflow-hidden rounded-xl border border-[#D7DCE3] bg-[#F3F5F7]">
       <div className="relative aspect-square overflow-hidden bg-[#E8EBEF]">
         <img
           src={activeImage}

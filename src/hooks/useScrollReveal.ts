@@ -12,7 +12,7 @@ export function useScrollReveal(rootMargin = "-60px") {
     const container = containerRef.current;
     if (!container) return;
 
-    const targets = container.querySelectorAll(".reveal, .reveal-scale");
+    const targets = container.querySelectorAll(".reveal, .reveal-scale, .reveal-side-right, .reveal-side-left");
     if (!targets.length) return;
 
     const observer = new IntersectionObserver(
