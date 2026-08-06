@@ -7,6 +7,7 @@ import { Contact } from "@/components/cb/Contact";
 import { Footer } from "@/components/cb/Footer";
 import { Categories } from "@/components/cb/Categories";
 import { CatalogCta, TrustSection } from "@/components/cb/CommerceSections";
+import { BrandShowcase } from "@/components/cb/BrandShowcase";
 import { initializeCloudSync } from "@/lib/cloud-sync";
 import { useToast, ToastContainer } from "@/components/cb/Toast";
 import { ArrowUp, MessageCircle } from "lucide-react";
@@ -133,6 +134,7 @@ function Index() {
         onClear={clearCart}
       />
       <Hero />
+      <BrandShowcase />
       <Categories />
       <Products onAddToCart={addToCart} cartQtyById={cartQtyById} />
       <TrustSection />
