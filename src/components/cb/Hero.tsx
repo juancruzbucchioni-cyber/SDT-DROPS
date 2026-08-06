@@ -18,8 +18,14 @@ export function Hero() {
             <a href="#nosotros" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#D7DCE3] bg-[#F3F5F7] px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:text-primary">Conocé SDT DROPS</a>
           </div>
         </div>
-        <div className="hero-animate-image flex aspect-[16/8] items-center overflow-hidden rounded-2xl border border-[#162B52] bg-[#010713] p-1.5 shadow-[0_16px_45px_rgba(17,24,39,.12)]">
-          <img src={logoEffect} alt="Selección de productos importados SDT DROPS" className="h-full w-full object-contain transition-transform duration-700 hover:scale-[1.03]" />
+        <div className="hero-animate-image flex aspect-[16/9] items-center overflow-hidden rounded-2xl border border-[#162B52] bg-[#010713] p-2 shadow-[0_16px_45px_rgba(17,24,39,.12)]">
+          <img
+            src={logoEffect}
+            alt="SDT DROPS Importador Mayorista"
+            loading="eager"
+            fetchPriority="high"
+            className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+          />
         </div>
       </div>
     </section>
